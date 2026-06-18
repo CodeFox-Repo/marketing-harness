@@ -1,0 +1,13 @@
+name: "campaign-name"
+brief: "What this campaign should communicate"
+style: "launch-hero"
+content:
+  headline: "Visible headline"
+  subject: "Main subject or scene description"
+deliverables:
+  - id: "web-banner"
+    size: [1920, 600]
+  - id: "social-square"
+    size: [1080, 1080]
+  - id: "poster"
+    size: [1080, 1920]

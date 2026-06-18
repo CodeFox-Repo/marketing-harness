@@ -1,0 +1,111 @@
+version: 1.0.1
+portfolio:
+  id: anthropic
+  name: Anthropic
+  version: 1.0.0
+brand:
+  id: claude
+  name: Claude
+provider:
+  gateway: gpt-image-skill
+  model: gpt-image-2
+  params:
+    seed_strategy: per_asset
+    seed: 20260619
+    quality: high
+    timeout_seconds: 240
+    retry_attempts: 2
+    output_format: png
+    background: opaque
+    moderation: auto
+global:
+  color:
+    ink:
+      $value: '#191713'
+      $type: color
+    paper:
+      $value: '#F7F1E8'
+      $type: color
+    clay:
+      $value: '#D87857'
+      $type: color
+    shell:
+      $value: '#EBBBAC'
+      $type: color
+    graphite:
+      $value: '#3A342D'
+      $type: color
+    signal-blue:
+      $value: '#2F6F9F'
+      $type: color
+    void:
+      $value: '#070A0F'
+      $type: color
+    lunar-dust:
+      $value: '#D8D0C4'
+      $type: color
+    claude-clay:
+      $value: '#D87857'
+      $type: color
+    signal-cyan:
+      $value: '#38DDF8'
+      $type: color
+    orbit-blue:
+      $value: '#2458A7'
+      $type: color
+    instrument-green:
+      $value: '#8FE6C1'
+      $type: color
+  typography:
+    display-face:
+      $value: large crisp high-contrast serif masthead for Claude, paired with compact
+        mission-control sans typography
+      $type: fontFamily
+    utility-face:
+      $value: condensed technical sans or monospaced interface labels, sharp numeric
+        readouts, bilingual text legible at poster distance
+      $type: fontFamily
+  style-fragment:
+    flag-editorial:
+      $value: premium public-benefit AI campaign poster, one modern woven fabric flag
+        as the hero object, clear editorial hierarchy, tactile paper and desk-light
+        realism, quiet confidence, spacious composition
+      $type: text
+    thinking-space:
+      $value: 'visual cues of serious thinking: paper margins, soft gridlines, pencil
+        notes, simple reasoning diagrams, controlled negative space, no generic glowing
+        AI sphere'
+      $type: text
+    aerospace-flag:
+      $value: premium high-technology aerospace campaign poster, one modern fabric
+        flag as the hero object, cinematic moon-mission composition, precision hardware
+        realism, controlled heroic scale, strong frontier energy
+      $type: text
+    mission-interface:
+      $value: transparent mission-control HUD overlays, orbital telemetry arcs, lidar
+        scan grids, terrain mapping contours, compact rover and sensor cues, optical
+        blue-cyan signal light, crisp data readouts, disciplined technical hierarchy
+      $type: text
+  negative:
+    global-exclude:
+      $value: garbled text, unreadable typography, malformed Claude word, fake official
+        seals, fake sponsor logos, watermark, cheap e-commerce flyer, cartoon astronaut,
+        glossy robot mascot, generic glowing AI sphere, cozy paper notebook, hand-drawn
+        desk sketch, warm scrapbook editorial, low-tech workbench props, crowded composition
+      $type: text
+alias:
+  style:
+    flag-launch:
+      $type: composite
+      $value:
+        prompt: '{global.style-fragment.aerospace-flag}, {global.style-fragment.mission-interface}'
+        palette:
+        - '{global.color.void}'
+        - '{global.color.lunar-dust}'
+        - '{global.color.claude-clay}'
+        - '{global.color.signal-cyan}'
+        - '{global.color.orbit-blue}'
+        - '{global.color.instrument-green}'
+        typography: '{global.typography.display-face}; {global.typography.utility-face}'
+        negative: '{global.negative.global-exclude}'
+        references: []

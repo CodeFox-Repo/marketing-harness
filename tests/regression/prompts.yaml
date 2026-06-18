@@ -1,0 +1,61 @@
+prompts:
+  - id: "hero-interface"
+    brief: "产品发布主视觉回归"
+    style: "launch-hero"
+    headline: "Launch Ready"
+    subject: "a refined product dashboard floating above a precise geometric stage"
+    size: [1024, 1024]
+  - id: "mobile-feature"
+    brief: "移动端功能宣发回归"
+    style: "launch-hero"
+    headline: "Built for Teams"
+    subject: "a premium mobile app screen with collaboration signals and clean motion cues"
+    size: [1024, 1024]
+  - id: "developer-tool"
+    brief: "开发者工具宣发回归"
+    style: "social-default"
+    headline: "Ship Faster"
+    subject: "a code editor and deployment timeline rendered as elegant product objects"
+    size: [1024, 1024]
+  - id: "data-report"
+    brief: "数据报告宣发回归"
+    style: "social-default"
+    headline: "Insights Weekly"
+    subject: "abstract charts and report pages arranged with editorial discipline"
+    size: [1024, 1024]
+  - id: "security"
+    brief: "安全能力宣发回归"
+    style: "launch-hero"
+    headline: "Secure by Design"
+    subject: "a secure workspace with subtle shield geometry and polished interface surfaces"
+    size: [1024, 1024]
+  - id: "automation"
+    brief: "自动化能力宣发回归"
+    style: "social-default"
+    headline: "Automate the Busywork"
+    subject: "connected workflow nodes becoming a clean product interface"
+    size: [1024, 1024]
+  - id: "integration"
+    brief: "集成能力宣发回归"
+    style: "social-default"
+    headline: "Connect Everything"
+    subject: "multiple app tiles orbiting a central product canvas with restrained energy"
+    size: [1024, 1024]
+  - id: "ai-assist"
+    brief: "AI 助手宣发回归"
+    style: "launch-hero"
+    headline: "Ask. Build. Repeat."
+    subject: "an assistant panel helping refine a polished product workflow"
+    size: [1024, 1024]
+  - id: "enterprise"
+    brief: "企业版宣发回归"
+    style: "launch-hero"
+    headline: "Enterprise Ready"
+    subject: "large scale admin controls and governance visuals in a premium composition"
+    size: [1024, 1024]
+  - id: "customer-story"
+    brief: "客户案例宣发回归"
+    style: "social-default"
+    headline: "Teams That Scale"
+    subject: "a calm editorial customer story layout with product proof points"
+    size: [1024, 1024]

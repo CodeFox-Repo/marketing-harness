@@ -1,0 +1,5 @@
+published/**/*.png filter=lfs diff=lfs merge=lfs -text
+published/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+published/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+published/**/*.webp filter=lfs diff=lfs merge=lfs -text
+published/**/*.gif filter=lfs diff=lfs merge=lfs -text

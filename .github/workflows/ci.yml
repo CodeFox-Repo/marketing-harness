@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, test, and dry-run render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Test
+        run: uv run pytest
+
+      - name: Validate example campaign
+        run: uv run harness validate workspace/products/codefox/codefox/campaigns/example.campaign.yaml
+
+      - name: Render example campaign without API calls
+        run: uv run harness render workspace/products/codefox/codefox/campaigns/example.campaign.yaml --dry-run
+
+      - name: Check dry-run output contract
+        run: |
+          test -f outputs/feature-x-launch/manifest.json
+          test -f outputs/feature-x-launch/run.lock.json

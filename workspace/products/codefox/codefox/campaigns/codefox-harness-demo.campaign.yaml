@@ -1,0 +1,13 @@
+name: "codefox-harness-demo"
+brief: "CodeFox Marketing Harness end-to-end demo launch"
+style: "launch-hero"
+content:
+  headline: "One Brand Lock. Every Launch."
+  subject: "a precise developer-tool launch visual showing locked design tokens flowing through a clean generation pipeline into versioned marketing artifacts"
+deliverables:
+  - id: "social-card"
+    size: [1200, 630]
+  - id: "square-post"
+    size: [1080, 1080]
+  - id: "web-banner"
+    size: [1920, 600]
