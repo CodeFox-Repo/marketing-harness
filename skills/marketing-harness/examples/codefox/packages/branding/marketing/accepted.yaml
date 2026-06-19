@@ -1,7 +1,6 @@
 schema_version: "1.0"
 owner:
-  kind: "brand"
-  portfolio_id: "codefox"
+  kind: "repo"
   id: "codefox"
 revision: 1
 accepted:

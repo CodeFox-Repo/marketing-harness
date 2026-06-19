@@ -7,15 +7,32 @@ organization:
   id: codefox-org
   name: CodeFox Org
 
-portfolio:
-  id: codefox
-  name: CodeFox
-  version: 1.0.0
-
-brand:
-  lock: packages/branding/marketing/brand.lock.yaml
+theme:
+  path: packages/branding/marketing/theme.md
   campaigns: packages/branding/marketing/campaigns
   references: packages/branding/marketing/references
+
+producers:
+  image:
+    kind: local-command
+    commandEnv: HARNESS_SKILL_CLI_COMMAND
+    defaultCommand: gpt-image
+  design:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  slide:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  logo:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  social:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
 
 campaign:
   name: example

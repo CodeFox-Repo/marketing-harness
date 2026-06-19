@@ -33,15 +33,13 @@ def build_accepted_asset_draft(
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     asset = find_manifest_asset(manifest, asset_id)
     campaign = str(manifest["campaign"])
-    brand = brand_info(manifest)
-    portfolio = portfolio_info(manifest, brand)
+    repo = repo_info(manifest)
     source_path = output_dir / str(asset["file"])
     approved_dir = (
         approved_root
-        / "products"
-        / portfolio["id"]
-        / brand["id"]
-        / brand["version"]
+        / "repos"
+        / repo["id"]
+        / repo["version"]
         / "artifacts"
         / campaign
     )
@@ -77,37 +75,28 @@ def find_manifest_asset(manifest: dict[str, Any], asset_id: str) -> dict[str, An
     raise ValueError(f"asset id not found in manifest: {asset_id}")
 
 
-def brand_info(manifest: dict[str, Any]) -> dict[str, str]:
-    brand = manifest.get("brand")
-    if isinstance(brand, dict):
-        brand_id = str(brand.get("id") or "unknown-brand")
-        brand_name = str(brand.get("name") or brand_id)
-        brand_version = str(brand.get("version") or manifest.get("brand_lock_version") or "0.0.0")
+def repo_info(manifest: dict[str, Any]) -> dict[str, str]:
+    repo = manifest.get("repo")
+    if isinstance(repo, dict):
+        repo_id = str(repo.get("id") or "unknown-repo")
+        repo_name = str(repo.get("name") or repo_id)
+        repo_version = str(repo.get("version") or manifest.get("theme_version") or "0.0.0")
     else:
-        brand_id = "unknown-brand"
-        brand_name = "Unknown Brand"
-        brand_version = str(manifest.get("brand_lock_version") or "0.0.0")
+        legacy_brand = manifest.get("brand")
+        if isinstance(legacy_brand, dict):
+            repo_id = str(legacy_brand.get("id") or "unknown-repo")
+            repo_name = str(legacy_brand.get("name") or repo_id)
+            repo_version = str(
+                legacy_brand.get("version") or manifest.get("brand_lock_version") or "0.0.0"
+            )
+        else:
+            repo_id = "unknown-repo"
+            repo_name = "Unknown Repo"
+        repo_version = str(manifest.get("theme_version") or "0.0.0")
     return {
-        "id": safe_path_segment(brand_id, "brand id"),
-        "name": brand_name,
-        "version": safe_version_segment(brand_version),
-    }
-
-
-def portfolio_info(manifest: dict[str, Any], brand: dict[str, str]) -> dict[str, str]:
-    portfolio = manifest.get("portfolio")
-    if isinstance(portfolio, dict):
-        portfolio_id = str(portfolio.get("id") or brand["id"])
-        portfolio_name = str(portfolio.get("name") or portfolio_id)
-        portfolio_version = str(portfolio.get("version") or brand["version"])
-    else:
-        portfolio_id = brand["id"]
-        portfolio_name = brand["name"]
-        portfolio_version = brand["version"]
-    return {
-        "id": safe_path_segment(portfolio_id, "portfolio id"),
-        "name": portfolio_name,
-        "version": safe_version_segment(portfolio_version),
+        "id": safe_path_segment(repo_id, "repo id"),
+        "name": repo_name,
+        "version": safe_version_segment(repo_version),
     }
 
 
@@ -119,5 +108,5 @@ def safe_path_segment(value: str, label: str) -> str:
 
 def safe_version_segment(value: str) -> str:
     if "/" in value or value in {"", ".", ".."}:
-        raise ValueError(f"brand version is not safe for accepted asset paths: {value}")
+        raise ValueError(f"repo version is not safe for accepted asset paths: {value}")
     return value

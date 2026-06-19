@@ -10,6 +10,7 @@ from typing import Any
 
 VALUE_FLAGS = {
     "--brand",
+    "--theme",
     "--outputs-dir",
 }
 DEFAULT_MARKETING_ROOT = "marketing"
@@ -61,7 +62,7 @@ def apply_metadata_args(args: list[str], metadata: dict[str, Any]) -> list[str]:
         campaign = metadata_path(metadata, project_root, "campaign", "path")
         if campaign and not has_positional(next_args, start=1):
             next_args.insert(1, campaign)
-        add_option(next_args, "--brand", metadata_path(metadata, project_root, "brand", "lock"))
+        add_option(next_args, "--theme", theme_source_path(metadata, project_root))
 
     if command == "render":
         add_option(
@@ -154,11 +155,11 @@ def check_project(args: list[str], metadata: dict[str, Any], metadata_path: str 
             "metadata": metadata_path or "",
             "marketing_root": paths["marketing_root"],
             "marketing_root_exists": paths["marketing_root"].exists(),
-            "brand_lock": metadata_path_value(metadata, "brand", "lock") or "",
-            "brand_lock_exists": Path(
-                metadata_path_value(metadata, "brand", "lock") or ""
+            "theme": theme_source_path_value(metadata) or "",
+            "theme_exists": Path(
+                theme_source_path_value(metadata) or ""
             ).exists()
-            if metadata_path_value(metadata, "brand", "lock")
+            if theme_source_path_value(metadata)
             else False,
             "campaign": metadata_path_value(metadata, "campaign", "path") or "",
             "campaign_exists": Path(
@@ -199,7 +200,7 @@ def print_plan(metadata: dict[str, Any]) -> None:
             "scratch_dir": paths["scratch_dir"],
             "approved_dir": paths["approved_dir"],
             "accepted_state": paths["accepted_state"],
-            "brand_lock": metadata_path_value(metadata, "brand", "lock") or "",
+            "theme": theme_source_path_value(metadata) or "",
             "campaign": metadata_path_value(metadata, "campaign", "path") or "",
             "allow_root_workspace_bootstrap": bool_at(
                 metadata, False, "policy", "allowRootWorkspaceBootstrap"
@@ -252,8 +253,8 @@ def project_paths(metadata: dict[str, Any], project_root: Path) -> dict[str, Pat
         "accepted",
     )
     directory_state_file = string_at(metadata, "state", "directoryStateFile") or "asset-state.yaml"
-    campaigns_value = metadata_path_value(metadata, "brand", "campaigns")
-    references_value = metadata_path_value(metadata, "brand", "references")
+    campaigns_value = theme_metadata_path_value(metadata, "campaigns")
+    references_value = theme_metadata_path_value(metadata, "references")
     campaigns_dir = (
         Path(resolve_project_path(project_root, campaigns_value))
         if campaigns_value
@@ -301,11 +302,10 @@ def collect_state_snapshot(
             "marketing_root": str(paths["marketing_root"]),
         },
         "organization": mapping_summary(value_at(metadata, "organization")),
-        "portfolio": mapping_summary(value_at(metadata, "portfolio")),
-        "brand": {
-            "lock": metadata_path_value(metadata, "brand", "lock") or "",
-            "campaigns": metadata_path_value(metadata, "brand", "campaigns") or "",
-            "references": metadata_path_value(metadata, "brand", "references") or "",
+        "theme": {
+            "path": theme_metadata_path_value(metadata, "path") or "",
+            "campaigns": theme_metadata_path_value(metadata, "campaigns") or "",
+            "references": theme_metadata_path_value(metadata, "references") or "",
         },
         "state": {
             "plans": str(paths["plans_dir"]),
@@ -427,7 +427,7 @@ def declared_asset_roots(
 def should_read_state_file(path: Path, directory_state_file: str, scratch_dir: Path) -> bool:
     if not path.is_file():
         return False
-    if any(part in {".git", "node_modules", "__pycache__"} for part in path.parts):
+    if any(part in {".git", "node_modules", "__pycache__", "portfolios"} for part in path.parts):
         return False
     try:
         path.relative_to(scratch_dir.resolve())
@@ -483,7 +483,6 @@ def summarize_state_data(data: Any) -> dict[str, Any]:
         "schema_version": data.get("schema_version", ""),
         "owner_kind": owner.get("kind", ""),
         "owner_id": owner.get("id", ""),
-        "portfolio_id": owner.get("portfolio_id", ""),
         "revision": data.get("revision", ""),
         "accepted_count": len(accepted),
         "asset_count": len(assets),
@@ -497,7 +496,10 @@ def count_images(root: Path, scratch_dir: Path) -> int:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
-        if any(part in {".git", "node_modules", "__pycache__"} for part in path.parts):
+        if any(
+            part in {".git", "node_modules", "__pycache__", "portfolios"}
+            for part in path.parts
+        ):
             continue
         try:
             path.relative_to(scratch_dir.resolve())
@@ -620,6 +622,34 @@ def metadata_path(metadata: dict[str, Any], project_root: Path, *parts: str) -> 
 def metadata_path_value(metadata: dict[str, Any], *parts: str) -> str | None:
     value = value_at(metadata, *parts)
     return str(value) if value not in (None, "") else None
+
+
+def theme_metadata_path(metadata: dict[str, Any], project_root: Path, part: str) -> str | None:
+    value = theme_metadata_path_value(metadata, part)
+    if not value:
+        return None
+    return resolve_project_path(project_root, value)
+
+
+def theme_metadata_path_value(metadata: dict[str, Any], part: str) -> str | None:
+    return metadata_path_value(metadata, "theme", part) or metadata_path_value(
+        metadata, "brand", part
+    )
+
+
+def theme_source_path(metadata: dict[str, Any], project_root: Path) -> str | None:
+    value = theme_source_path_value(metadata)
+    if not value:
+        return None
+    return resolve_project_path(project_root, value)
+
+
+def theme_source_path_value(metadata: dict[str, Any]) -> str | None:
+    return (
+        metadata_path_value(metadata, "theme", "path")
+        or metadata_path_value(metadata, "theme", "lock")
+        or metadata_path_value(metadata, "brand", "lock")
+    )
 
 
 def resolve_project_path(project_root: Path, value: object) -> str:

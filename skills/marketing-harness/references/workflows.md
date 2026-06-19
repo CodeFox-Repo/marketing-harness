@@ -12,18 +12,18 @@ plan -> produce candidates -> user accepts exact candidates -> record state -> n
 
 Start each task by reading the product repo's metadata and state files:
 
-- organization and portfolio metadata declared by the metadata file.
-- `brand.lock.yaml`: frozen product brand style.
+- organization metadata and `theme.md` declared by the metadata file.
+- `theme.md`: frozen repo visual style in YAML frontmatter plus design notes in Markdown.
 - `campaigns/`: campaign inputs.
 - `references/`: local reference assets.
 - `asset-state.yaml`: directory-level memory under declared asset roots.
 - `accepted.yaml`: user-accepted assets and patterns from prior cycles.
 - `artifacts.scratch`: temporary candidate output.
 - `artifacts.approved`: durable files copied only after acceptance.
-- `sources.relatedRepos`: same-org or same-portfolio product repos that can
-  provide accepted state and asset-state context.
+- `sources.relatedRepos`: same-org repos that can provide accepted state and
+  asset-state context.
 
-When metadata declares portfolio or related-product sources, treat them as
+When metadata declares related-product sources, treat them as
 read-only context. Prefer local checkouts or local caches. If remote GitHub or
 GitLab access is needed, fetch only the declared files and pin resolved commits
 in the plan. Do not copy other repos into the current product repo.
@@ -34,7 +34,7 @@ Run the bundled state preflight before writing a production plan:
 python3 "$SKILL_ROOT/scripts/harness.py" --metadata path/to/marketing.harness.yaml state
 ```
 
-Use the JSON as a read summary of the current org, portfolio, repo, directory,
+Use the JSON as a read summary of the current org, repo, directory,
 accepted corpus, and related-repo state. This command is read-only and must not
 be turned into a user-facing asset intake workflow.
 
@@ -43,11 +43,11 @@ be turned into a user-facing asset intake workflow.
 Write a production plan before rendering. A plan should capture:
 
 - objective and audience
-- current organization, portfolio, product, and directory state used
+- current organization, repo, and directory state used
 - accepted examples considered
 - related products or registry sources consulted
 - campaign file path
-- brand lock path and version
+- theme lock path and version
 - candidate deliverables
 - cost/risk notes for live generation
 - acceptance criteria
@@ -55,7 +55,7 @@ Write a production plan before rendering. A plan should capture:
 Store plans under metadata `state.plans`, for example:
 
 ```text
-packages/branding/marketing/plans/<campaign>.plan.yaml
+assets/marketing/plans/<campaign>.plan.yaml
 ```
 
 Plans are source state. They are not generated image artifacts.
@@ -71,12 +71,12 @@ logo-theme explorations, X/XHS promotional cards, website hero assets, social
 post images, or other campaign-specific visual formats. They should all follow
 the same state loop.
 
-Candidates are not durable brand memory. They remain scratch until the user
+Candidates are not durable visual memory. They remain scratch until the user
 accepts specific outputs.
 
 Review candidates for:
 
-- brand lock fit
+- theme lock fit
 - text quality and legibility
 - dimensions and file format
 - consistency with accepted examples
@@ -95,7 +95,7 @@ For each accepted candidate:
 3. Record an `accepted.yaml` entry with campaign, asset id, path, checksum,
    tags, notes, and source run lock path.
 4. If the asset reveals a reusable pattern, update the relevant directory
-   `asset-state.yaml`, `elements.yaml`, or a portfolio proposal separately.
+   `asset-state.yaml`, `elements.yaml`, or a theme proposal separately.
 
 Rejected or unreviewed candidates stay in scratch and should not feed future
 planning.
@@ -108,8 +108,7 @@ record:
 ```yaml
 schema_version: "1.0"
 owner:
-  kind: "brand"
-  portfolio_id: "codefox"
+  kind: "repo"
   id: "kobe"
 revision: 3
 accepted:
@@ -117,9 +116,9 @@ accepted:
     kind: "artifact"
     campaign: "launch"
     asset_id: "web-banner"
-    path: "packages/branding/public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/web-banner.png"
-    manifest: "packages/branding/public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/manifest.json"
-    run_lock: "packages/branding/.harness/out/launch/run.lock.json"
+    path: "public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/web-banner.png"
+    manifest: "public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/manifest.json"
+    run_lock: ".harness/marketing/out/launch/run.lock.json"
     checksum_sha256: "..."
     tags: ["launch", "web-banner", "accepted"]
     notes: "Accepted by the user for the launch campaign."
@@ -141,4 +140,4 @@ If local paths are unavailable, use declared remote metadata only and record the
 remote commit or version in the plan. Do not rely on a one-paragraph description
 when the actual state files and accepted assets can be read.
 
-Never treat rejected candidates or scratch output as brand memory.
+Never treat rejected candidates or scratch output as visual memory.

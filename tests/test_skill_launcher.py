@@ -33,13 +33,8 @@ def metadata(root: Path) -> dict[str, object]:
             "id": "codefox-org",
             "name": "CodeFox Org",
         },
-        "portfolio": {
-            "id": "codefox",
-            "name": "CodeFox",
-            "version": "1.0.0",
-        },
-        "brand": {
-            "lock": "packages/branding/marketing/brand.lock.yaml",
+        "theme": {
+            "path": "packages/branding/marketing/theme.md",
             "campaigns": "packages/branding/marketing/campaigns",
             "references": "packages/branding/marketing/references",
         },
@@ -75,15 +70,15 @@ def test_metadata_supplies_validate_and_render_paths(tmp_path: Path) -> None:
     render_args = launcher.apply_metadata_args(["render", "--dry-run"], meta)
 
     campaign = str(tmp_path / "packages/branding/marketing/campaigns/launch.campaign.yaml")
-    brand = str(tmp_path / "packages/branding/marketing/brand.lock.yaml")
+    theme = str(tmp_path / "packages/branding/marketing/theme.md")
     outputs = str(tmp_path / "packages/branding/.harness/out")
-    assert validate_args == ["validate", campaign, "--brand", brand]
+    assert validate_args == ["validate", campaign, "--theme", theme]
     assert render_args == [
         "render",
         campaign,
         "--dry-run",
-        "--brand",
-        brand,
+        "--theme",
+        theme,
         "--outputs-dir",
         outputs,
     ]
@@ -167,7 +162,6 @@ def test_state_preflight_reads_repo_directory_and_related_state(tmp_path: Path) 
 schema_version: "1.0"
 owner:
   kind: "repo"
-  portfolio_id: "codefox"
   id: "repo-a"
 revision: 1
 accepted:
@@ -195,7 +189,6 @@ patterns:
 schema_version: "1.0"
 owner:
   kind: "repo"
-  portfolio_id: "codefox"
   id: "repo-b"
 revision: 4
 accepted:
@@ -213,12 +206,8 @@ project:
 organization:
   id: codefox-org
   name: CodeFox Org
-portfolio:
-  id: codefox
-  name: CodeFox
-  version: 1.0.0
-brand:
-  lock: packages/branding/marketing/brand.lock.yaml
+theme:
+  path: packages/branding/marketing/theme.md
   campaigns: packages/branding/marketing/campaigns
   references: packages/branding/marketing/references
 artifacts:
@@ -255,23 +244,24 @@ sources:
     assert state_summaries["asset-state.yaml"]["asset_count"] == 1
     assert state_summaries["asset-state.yaml"]["pattern_count"] == 1
     assert snapshot["organization"]["id"] == "codefox-org"
-    assert snapshot["portfolio"]["id"] == "codefox"
+    assert snapshot["theme"]["path"] == "packages/branding/marketing/theme.md"
     assert snapshot["related_repos"][0]["state_summary"]["accepted_count"] == 1
     assert any("accepted.yaml" in path for path in snapshot["read_before_production"])
 
 
 def test_render_dry_run_uses_bundled_scripts(tmp_path: Path) -> None:
     project = tmp_path
-    brand = project / "packages/branding/marketing/brand.lock.yaml"
+    theme = project / "packages/branding/marketing/theme.md"
     campaign = project / "packages/branding/marketing/campaigns/launch.campaign.yaml"
     metadata_path = project / "marketing.harness.json"
-    brand.parent.mkdir(parents=True)
+    theme.parent.mkdir(parents=True)
     campaign.parent.mkdir(parents=True)
-    brand.write_text(
+    theme.write_text(
         """
-brand:
-  id: test-brand
-  name: Test Brand
+---
+repo:
+  id: test-repo
+  name: Test Repo
 version: 1.0.0
 provider:
   gateway: gpt-image-skill
@@ -298,6 +288,9 @@ alias:
         negative: ""
         references: []
       $type: composite
+---
+
+# Test Repo Theme
 """.lstrip(),
         encoding="utf-8",
     )

@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover - exercised only on minimal Python insta
 TOKEN_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 REFERENCE_RE = re.compile(r"\{([^{}]+)\}")
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
-BRAND_ALLOWED = {"portfolio", "brand", "version", "provider", "global", "alias"}
+BRAND_ALLOWED = {"repo", "theme", "brand", "portfolio", "version", "provider", "global", "alias"}
 PROVIDER_ALLOWED = {"gateway", "model", "params"}
 CAMPAIGN_ALLOWED = {"name", "brief", "style", "content", "deliverables"}
 CONTENT_ALLOWED = {"headline", "subject"}
@@ -166,10 +166,10 @@ class LoadedConfig:
 
 def load_yaml(path: Path) -> dict[str, Any]:
     if yaml is None:
-        raise ConfigError("PyYAML is required to read brand and campaign YAML")
+        raise ConfigError("PyYAML is required to read theme and campaign files")
     try:
-        with path.open("r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
+        raw = path.read_text(encoding="utf-8")
+        data = yaml.safe_load(extract_yaml_source(raw, path)) or {}
     except FileNotFoundError as exc:
         raise ConfigError(f"{path}: file not found") from exc
     except yaml.YAMLError as exc:
@@ -178,6 +178,18 @@ def load_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ConfigError(f"{path}: expected a YAML mapping at the document root")
     return data
+
+
+def extract_yaml_source(raw: str, path: Path) -> str:
+    if path.suffix.lower() != ".md":
+        return raw
+    if not raw.startswith("---\n"):
+        raise ConfigError(f"{path}: Markdown theme files must start with YAML frontmatter")
+    _start, _sep, rest = raw.partition("---\n")
+    frontmatter, sep, _body = rest.partition("\n---")
+    if not sep:
+        raise ConfigError(f"{path}: Markdown theme frontmatter is not closed")
+    return frontmatter
 
 
 def load_brand(path: Path) -> tuple[BrandLock, dict[str, Any]]:
@@ -216,12 +228,19 @@ def load_harness_config(
 
 def parse_brand_lock(raw: dict[str, Any], context: str) -> BrandLock:
     forbid_extra(raw, BRAND_ALLOWED, context)
+    repo_raw = (
+        optional_mapping(raw, "repo", context)
+        or optional_mapping(raw, "theme", context)
+        or optional_mapping(raw, "brand", context)
+    )
+    if repo_raw is None:
+        raise ConfigError(f"{context}: repo is required")
     portfolio_raw = optional_mapping(raw, "portfolio", context)
     return BrandLock(
         portfolio=parse_portfolio(portfolio_raw, f"{context}.portfolio")
         if portfolio_raw is not None
         else None,
-        brand=parse_brand_identity(required_mapping(raw, "brand", context), f"{context}.brand"),
+        brand=parse_brand_identity(repo_raw, f"{context}.repo"),
         version=require_semver(raw, "version", context),
         provider=parse_provider(
             optional_mapping(raw, "provider", context) or {},
@@ -436,7 +455,7 @@ def resolve_style_alias(brand: BrandLock, style_name: str) -> ResolvedStyle:
     if token is None:
         available = ", ".join(available_style_names(brand)) or "<none>"
         raise UnknownStyleError(
-            f"campaign.style '{style_name}' does not exist in brand alias.style. "
+            f"campaign.style '{style_name}' does not exist in theme alias.style. "
             f"Available styles: {available}"
         )
 

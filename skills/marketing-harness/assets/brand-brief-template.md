@@ -1,6 +1,6 @@
-# Brand Brief
+# Theme Brief
 
-## Brand
+## Repo
 
 Name:
 
@@ -30,7 +30,7 @@ What to avoid:
 
 ## References
 
-Place reference images in the metadata `brand.references` directory and list the intended role here.
+Place reference images in the metadata `theme.references` directory and list the intended role here.
 
 - `main_visual.png`:
 - `logo.png`:

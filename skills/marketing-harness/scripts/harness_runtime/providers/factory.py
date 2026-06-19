@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class UnsupportedProviderError(ProviderError):
-    """Raised when brand.lock references an unsupported provider gateway."""
+    """Raised when a theme references an unsupported provider gateway."""
 
 
 SUPPORTED_PROVIDER_GATEWAYS = ("gpt-image-skill", "skill-cli")

@@ -109,16 +109,14 @@ def render_loaded_config(
         "schema_version": "1.0",
         "generated_at": generated_at,
         "dry_run": dry_run,
-        "portfolio": {
-            "id": brand.portfolio.id,
-            "name": brand.portfolio.name,
-            "version": brand.portfolio.version,
-        }
-        if brand.portfolio
-        else None,
-        "brand_lock_path": str(loaded.brand_path),
+        "repo": {
+            "id": brand.brand.id,
+            "name": brand.brand.name,
+            "version": brand.version,
+        },
+        "theme_path": str(loaded.brand_path),
         "campaign_path": str(loaded.campaign_path),
-        "brand_lock": loaded.brand_raw,
+        "theme": loaded.brand_raw,
         "campaign": loaded.campaign_raw,
         "sidecars": {
             snapshot.kind: {
@@ -171,7 +169,7 @@ def build_asset_prompt(
 ) -> str:
     width, height = deliverable.size
     parts = [
-        f"Brand style: {style.prompt}",
+        f"Locked visual style: {style.prompt}",
         f"Campaign brief: {brief}",
         f"Subject: {content.subject}",
         f"Deliverable: {deliverable.id}, {width}x{height}px",
@@ -180,15 +178,15 @@ def build_asset_prompt(
         parts.append(f'Headline text to render exactly: "{content.headline}"')
     if style.palette:
         parts.append(
-            "Use only this brand palette unless natural lighting requires subtle neutrals: "
+            "Use only this locked palette unless natural lighting requires subtle neutrals: "
             f"{', '.join(style.palette)}"
         )
     if style.typography:
         parts.append(f"Typography direction for visible text: {style.typography}")
     if style.references:
-        parts.append(f"Respect brand reference assets: {', '.join(style.references)}")
+        parts.append(f"Respect visual reference assets: {', '.join(style.references)}")
     parts.append(
-        "Keep the locked brand style constant; vary only the campaign content and "
+        "Keep the locked visual style constant; vary only the campaign content and "
         "composition for this deliverable."
     )
     return "\n".join(parts)

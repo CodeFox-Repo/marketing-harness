@@ -1,40 +1,57 @@
 project:
   id: my-product
   root: .
-  marketingRoot: packages/branding/marketing
+  marketingRoot: assets/marketing
 
 organization:
   id: my-org
   name: My Org
 
-portfolio:
-  id: my-portfolio
-  name: My Portfolio
-  version: 1.0.0
+theme:
+  path: assets/marketing/theme.md
+  campaigns: assets/marketing/campaigns
+  references: assets/marketing/references
 
-brand:
-  lock: packages/branding/marketing/brand.lock.yaml
-  campaigns: packages/branding/marketing/campaigns
-  references: packages/branding/marketing/references
+producers:
+  image:
+    kind: local-command
+    commandEnv: HARNESS_SKILL_CLI_COMMAND
+    defaultCommand: gpt-image
+  design:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  slide:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  logo:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  social:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
 
 campaign:
   name: launch
-  path: packages/branding/marketing/campaigns/launch.campaign.yaml
+  path: assets/marketing/campaigns/launch.campaign.yaml
 
 artifacts:
-  scratch: packages/branding/.harness/out
-  approved: packages/branding/public/marketing
+  scratch: .harness/marketing/out
+  approved: public/marketing
 
 state:
-  plans: packages/branding/marketing/plans
-  assetIndex: packages/branding/marketing/asset-state.yaml
-  accepted: packages/branding/marketing/accepted.yaml
+  plans: assets/marketing/plans
+  assetIndex: assets/marketing/asset-state.yaml
+  accepted: assets/marketing/accepted.yaml
   directoryStateFile: asset-state.yaml
 
 sources:
   assetRoots:
-    - packages/branding/marketing
-    - packages/branding/public/marketing
+    - assets/marketing
+    - public/marketing
   relatedRepos: []
 
 policy:

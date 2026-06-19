@@ -2,9 +2,9 @@
 name: marketing-harness
 description: >-
   Use this skill to operate thin marketing-harness scripts from a product repo:
-  read YAML/JSON metadata, plan brand-locked campaigns, validate brand.lock and
+  read YAML/JSON metadata, plan theme-locked campaigns, validate theme.md and
   campaign YAML, render candidates through a local image skill/CLI provider,
-  and record only user-accepted assets into repo-owned brand state.
+  and record only user-accepted assets into repo-owned visual state.
 ---
 
 # Marketing Harness
@@ -18,7 +18,7 @@ and `agents/`.
 Preserve the boundary:
 
 ```text
-brand state -> production plan -> generated candidates -> user acceptance -> accepted state -> next production
+repo visual state -> production plan -> generated candidates -> user acceptance -> accepted state -> next production
 ```
 
 Never put visual style prompt text in campaign files. Campaigns describe content
@@ -41,40 +41,57 @@ Template:
 project:
   id: my-product
   root: .
-  marketingRoot: packages/branding/marketing
+  marketingRoot: assets/marketing
 
 organization:
   id: my-org
   name: My Org
 
-portfolio:
-  id: my-portfolio
-  name: My Portfolio
-  version: 1.0.0
+theme:
+  path: assets/marketing/theme.md
+  campaigns: assets/marketing/campaigns
+  references: assets/marketing/references
 
-brand:
-  lock: packages/branding/marketing/brand.lock.yaml
-  campaigns: packages/branding/marketing/campaigns
-  references: packages/branding/marketing/references
+producers:
+  image:
+    kind: local-command
+    commandEnv: HARNESS_SKILL_CLI_COMMAND
+    defaultCommand: gpt-image
+  design:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  slide:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  logo:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
+  social:
+    kind: local-skill
+    preferred: []
+    allowAutoInstall: false
 
 campaign:
   name: launch
-  path: packages/branding/marketing/campaigns/launch.campaign.yaml
+  path: assets/marketing/campaigns/launch.campaign.yaml
 
 artifacts:
-  scratch: packages/branding/.harness/out
-  approved: packages/branding/public/marketing
+  scratch: .harness/marketing/out
+  approved: public/marketing
 
 state:
-  plans: packages/branding/marketing/plans
-  assetIndex: packages/branding/marketing/asset-state.yaml
-  accepted: packages/branding/marketing/accepted.yaml
+  plans: assets/marketing/plans
+  assetIndex: assets/marketing/asset-state.yaml
+  accepted: assets/marketing/accepted.yaml
   directoryStateFile: asset-state.yaml
 
 sources:
   assetRoots:
-    - packages/branding/marketing
-    - packages/branding/public/marketing
+    - assets/marketing
+    - public/marketing
   relatedRepos: []
 
 policy:
@@ -93,15 +110,16 @@ Keep these roots separate:
 
 - **Project root:** the user's current product repo.
 - **Marketing root:** the product-owned source location from metadata, such as
-  `packages/branding/marketing`.
-- **Organization and portfolio state:** shared parent-brand context declared in
-  metadata, plus any local state files under declared asset roots.
+  `assets/marketing`.
+- **Organization direction:** high-level visual direction from `theme.path`.
+- **Repo asset tree:** the repo-owned hierarchy under declared asset roots.
+  Treat the repo and its asset directories as the asset namespace.
 - **Scratch output:** the product-owned temporary render location from metadata,
-  such as `packages/branding/.harness/out`.
+  such as `.harness/marketing/out`.
 - **Approved assets:** the product-owned location for user-accepted generated
   files.
 - **Accepted state:** the product-owned accepted corpus, usually
-  `packages/branding/marketing/accepted.yaml`.
+  `assets/marketing/accepted.yaml`.
 - **Directory state:** `state.directoryStateFile`, usually `asset-state.yaml`,
   found under declared asset roots and read before production.
 - **Related repo state:** local sibling repo metadata/state declared under
@@ -137,8 +155,8 @@ For the lifecycle, read `references/workflows.md`. For schema contracts, read
 
 ## Style Production
 
-When a design skill, Claude, Codex, or a human produces style, freeze the result
-as a reviewed `brand.lock.yaml` proposal before render. Style production is not
+When a design skill, Claude, Codex, or a human produces style, freeze the
+machine-readable tokens as YAML frontmatter in `theme.md` before render. Style production is not
 a harness command; use the most relevant local design skill or a human-provided
 brief and references, then write or update a proposal file under the
 metadata-declared marketing root.
@@ -146,7 +164,7 @@ metadata-declared marketing root.
 Selection order for design producers:
 
 1. If the user names a local design skill, prefer it.
-2. Otherwise prefer an already-installed local brand/frontend/visual design skill.
+2. Otherwise prefer an already-installed local frontend/visual design skill.
 3. If none exists, stop and ask the user to install/specify one or provide a
    reviewed brief and references.
 
@@ -157,20 +175,21 @@ Proposal review flow:
 2. Validate it with the bundled helper.
 3. Dry-render against a representative campaign.
 4. Ask the user to review the proposal and candidates.
-5. Only after review, update the official `brand.lock.yaml` path.
+5. Only after review, update the official `theme.md` path.
 
 ## Production Lifecycle
 
-Before live render, confirm API usage and possible cost. The harness has one
-live image entrypoint: a local image skill/CLI. Its credentials belong in the
-environment; never print, commit, or copy them into configuration files. Ensure
-the local `gpt-image` CLI is installed or `HARNESS_SKILL_CLI_COMMAND` points to
-an equivalent command. `provider.model` is optional; when omitted, this skill
-does not pass `--model` and lets the image provider choose its default.
+Before live render, confirm API usage and possible cost. The harness treats
+third-party production skills as local producer capabilities, not vendored
+dependencies. Declare producers in metadata, then use only locally installed or
+explicitly configured producers. Do not auto-download, auto-install, or silently
+switch production providers. Credentials belong in the environment; never
+print, commit, or copy them into configuration files. `provider.model` is
+optional; when omitted, this skill lets the image provider choose its default.
 
 Use this loop:
 
-1. Run the read-only state preflight and read current org, portfolio, product,
+1. Run the read-only state preflight and read current org, repo,
    directory, accepted corpus, reference, and related-repo state declared by
    metadata.
 2. Write or update a production plan under `state.plans`.
@@ -202,13 +221,9 @@ After code or workflow changes:
 ```bash
 uv run ruff check .
 uv run pytest
-python3 skills/marketing-harness/scripts/harness.py validate \
-  skills/marketing-harness/examples/codefox/packages/branding/marketing/campaigns/example.campaign.yaml \
-  --brand skills/marketing-harness/examples/codefox/packages/branding/marketing/brand.lock.yaml
-python3 skills/marketing-harness/scripts/harness.py render \
-  skills/marketing-harness/examples/codefox/packages/branding/marketing/campaigns/example.campaign.yaml \
-  --brand skills/marketing-harness/examples/codefox/packages/branding/marketing/brand.lock.yaml \
-  --dry-run
+cd skills/marketing-harness/examples/codefox
+python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate
+python3 ../../scripts/harness.py --metadata marketing.harness.yaml render --dry-run
 ```
 
 Check that no API key, authorization header, machine-specific path, or raw image

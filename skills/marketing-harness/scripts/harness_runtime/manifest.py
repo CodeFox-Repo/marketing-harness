@@ -33,13 +33,12 @@ def build_manifest(
     return {
         "schema_version": MANIFEST_SCHEMA_VERSION,
         "campaign": campaign.name,
-        "portfolio": portfolio_manifest(brand),
-        "brand": {
+        "repo": {
             "id": brand.brand.id,
             "name": brand.brand.name,
             "version": brand.version,
         },
-        "brand_lock_version": brand.version,
+        "theme_version": brand.version,
         "generated_at": generated_at,
         "provider": {
             "gateway": brand.provider.gateway,
@@ -59,18 +58,6 @@ def build_manifest(
             for asset in assets
         ],
     }
-
-
-def portfolio_manifest(brand: BrandLock) -> dict[str, str] | None:
-    if brand.portfolio is None:
-        return None
-    return {
-        "id": brand.portfolio.id,
-        "name": brand.portfolio.name,
-        "version": brand.portfolio.version,
-    }
-
-
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -1,7 +1,6 @@
 schema_version: "1.0"
 owner:
   kind: "directory"
-  portfolio_id: "codefox"
   id: "codefox-references"
 revision: 1
 purpose: "Reference imagery available before campaign production."
