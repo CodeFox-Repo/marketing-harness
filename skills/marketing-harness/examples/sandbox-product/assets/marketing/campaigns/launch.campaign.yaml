@@ -1,0 +1,9 @@
+name: launch
+brief: Sandbox launch image
+style: launch-hero
+content:
+  headline: Sandbox Launch
+  subject: Product UI on a clean table
+deliverables:
+  - id: web-banner
+    size: [640, 240]

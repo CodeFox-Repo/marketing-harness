@@ -1,0 +1,6 @@
+schema_version: "1.0"
+owner:
+  kind: "repo"
+  id: "sandbox-product"
+revision: 1
+accepted: []

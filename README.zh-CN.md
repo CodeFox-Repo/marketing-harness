@@ -193,9 +193,16 @@ repo 根目录用于维护 skill：
 uv sync
 uv run ruff check .
 uv run pytest
-cd skills/marketing-harness/examples/codefox
-python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate
+(cd skills/marketing-harness/examples/sandbox-product && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml check && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml render --dry-run)
+(cd skills/marketing-harness/examples/codefox && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate)
 ```
+
+`examples/sandbox-product` 是一个最小假业务 repo，给维护者在真实业务 repo
+前先 smoke-test 路径、state、validate 和 dry-run render 行为。它生成的
+`.harness/` 输出会被忽略。
 
 只打包 skill payload：
 

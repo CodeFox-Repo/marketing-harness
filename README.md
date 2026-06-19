@@ -143,9 +143,16 @@ exact files or asset ids.
 ```bash
 uv run ruff check .
 uv run pytest
-cd skills/marketing-harness/examples/codefox
-python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate
+(cd skills/marketing-harness/examples/sandbox-product && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml check && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml render --dry-run)
+(cd skills/marketing-harness/examples/codefox && \
+  uv run python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate)
 ```
+
+`examples/sandbox-product` is a minimal fake product repo for maintainers to
+smoke-test path, state, validate, and dry-run render behavior before trying
+changes in a real product repo. Its generated `.harness/` output is ignored.
 
 Only the installable skill payload is packaged by default; examples, tests,
 root maintainer files, and scratch outputs are excluded.
