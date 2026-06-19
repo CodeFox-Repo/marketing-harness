@@ -7,7 +7,6 @@ from pathlib import Path
 
 from harness_runtime.config import ConfigError, load_harness_config
 from harness_runtime.providers import ProviderError
-from harness_runtime.publish import publish_campaign
 from harness_runtime.render import render_campaign
 
 
@@ -41,14 +40,6 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--outputs-dir", default=Path("outputs"), type=Path)
     render.set_defaults(handler=handle_render)
 
-    publish = subcommands.add_parser("publish")
-    publish.add_argument("campaign_name")
-    publish.add_argument("--channel", default="repo", choices=["repo"])
-    publish.add_argument("--publish", action="store_true")
-    publish.add_argument("--outputs-dir", default=Path("outputs"), type=Path)
-    publish.add_argument("--repo-dir", type=Path)
-    publish.set_defaults(handler=handle_publish)
-
     return parser
 
 
@@ -73,23 +64,6 @@ def handle_render(args: argparse.Namespace) -> None:
     print(f"Rendered ({mode}): {result.output_dir}")
     print(f"Manifest: {result.manifest_path}")
     print(f"Run lock: {result.run_lock_path}")
-
-
-def handle_publish(args: argparse.Namespace) -> None:
-    result = publish_campaign(
-        campaign_name=args.campaign_name,
-        channel=args.channel,
-        outputs_dir=args.outputs_dir,
-        publish=args.publish,
-        repo_dir=args.repo_dir,
-    )
-    mode = "published" if args.publish else "dry-run"
-    print(f"{mode}: {result.channel}")
-    if result.artifact_path:
-        print(f"Artifact path: {result.artifact_path}")
-    for artifact in result.artifacts:
-        print(f"- {artifact['id']}: {artifact['url']}")
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

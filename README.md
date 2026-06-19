@@ -5,8 +5,8 @@
 Marketing Harness is an installable agent skill for producing brand-locked
 marketing images. Install the skill once, invoke it from a product repository,
 and let the agent validate brand tokens, prepare campaigns, render through a
-local image skill/CLI, and publish reviewed assets into that product repository's
-asset area.
+local image skill/CLI, and record only user-accepted assets into that product
+repository's brand state.
 
 This repo ships one installable skill payload plus maintainer tooling:
 
@@ -21,7 +21,7 @@ There is no top-level `src/` package in the skill shape.
 Marketing Harness keeps style and content separate:
 
 ```text
-brand memory -> brand.lock.yaml -> campaign.yaml -> render -> human review -> publish
+brand state -> production plan -> candidates -> user acceptance -> accepted state -> next production
 ```
 
 The skill helps an agent:
@@ -31,11 +31,11 @@ The skill helps an agent:
 - validate `brand.lock.yaml` and campaign files.
 - run dry-run renders without spending API credits.
 - call a local image skill/CLI for live renders.
-- require human asset review before publish.
-- publish immutable snapshots to `published/` or another asset repo path.
+- require human asset review before state updates.
+- copy accepted files into approved assets and update `accepted.yaml`.
 
-Downstream apps consume `manifest.json` and published image files. They do not
-run generation.
+Downstream apps consume accepted files and manifests. They do not run
+generation, and scratch candidates are not brand memory.
 
 ## Install
 
@@ -65,7 +65,7 @@ $marketing-harness bootstrap this repo for a new product brand
 $marketing-harness validate the CodeFox example campaign
 $marketing-harness create a campaign for a Claude flag poster, dry-run first
 $marketing-harness render this campaign with the current brand lock, then wait for review
-$marketing-harness publish the accepted campaign to the repo channel
+$marketing-harness record the accepted launch banner into brand state
 ```
 
 The installed skill contains a launcher:
@@ -90,6 +90,8 @@ packages/branding/
     campaigns/
     references/
     proposals/
+    plans/
+    accepted.yaml
   public/marketing/
     <approved assets and manifests>
   .harness/out/
@@ -100,9 +102,10 @@ packages/branding/
 - `artifacts.scratch` is the local render buffer.
 - `artifacts.approved` is the reviewed asset path, asset repo, or submodule
   target.
+- `state.accepted` is the durable accepted corpus used by future planning.
 
 Raw scratch outputs are not valuable by default. Promote only human-approved
-final assets into the approved path.
+final assets into the approved path and accepted state.
 
 ## Brand Lock Contract
 
@@ -130,13 +133,13 @@ image CLI chooses its default.
 Live render approval and asset approval are different.
 
 The skill should dry-run first, ask before spending API credits, render live
-only after approval, then show the generated files for review. `publish
---publish` should run only after the user or reviewer explicitly accepts the
-assets, unless they pre-approved automatic publishing.
+only after approval, then show the generated files for review. Accepted state
+should change only after the user or reviewer explicitly accepts exact files or
+asset ids.
 
 Use dry-run renders for review before changing an official brand lock or
-publishing live assets. The harness does not pretend to auto-grade image
-quality.
+recording live assets. The harness does not pretend to auto-grade image
+quality, and it does not offer a user-facing command to manually add assets.
 
 ## Skill Contents
 
@@ -157,8 +160,8 @@ skills/marketing-harness/
 ```
 
 `SKILL.md` is the agent-facing operating guide. This README is the human-facing
-overview. Detailed schemas and command flows live in `references/` so the skill
-can load only what a task needs.
+overview. Detailed schemas and lifecycle guidance live in `references/` so the
+skill can load only what a task needs.
 
 The development checkout may also contain `examples/`, but examples are not
 included in the default packaged skill artifact.
@@ -182,7 +185,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 ```
 
 Secrets are read from environment only. They should not be written into YAML,
-manifests, run locks, logs, or published snapshots.
+manifests, run locks, logs, or accepted snapshots.
 
 ## Maintainer Notes
 

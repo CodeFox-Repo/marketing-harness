@@ -1,156 +1,120 @@
-# Marketing Harness Workflows
+# Marketing Harness Lifecycle
 
-Run commands from the product repository root. The product repo owns the
-marketing paths declared in metadata; the installed skill owns workflow
-instructions and the harness launcher. Do not assume a root-level `workspace/`,
-`outputs/`, or `published/` tree.
-
-Set the launcher and metadata paths once:
-
-```bash
-HARNESS_SCRIPT="$SKILL_ROOT/scripts/harness.py"
-HARNESS_METADATA="packages/branding/marketing.harness.yaml"
-```
-
-The launcher runs the bundled scripts in this skill. It does not discover a
-parent runtime checkout, call `uvx`, or pull a remote runtime.
-
-## Setup
-
-Consumer repo:
-
-```bash
-sh "$SKILL_ROOT/scripts/bootstrap_project.sh" --metadata "$HARNESS_METADATA" .
-sh "$SKILL_ROOT/scripts/bootstrap_project.sh" --metadata "$HARNESS_METADATA" --write .
-```
-
-Harness development repo:
-
-```bash
-uv sync
-```
-
-Set image API credentials only if live rendering is approved and the chosen
-image CLI needs them:
-
-```env
-OPENAI_API_KEY=...
-OPENAI_BASE_URL=https://api.openai.com/v1
-```
-
-Never paste key values into committed files. The marketing harness does not
-read model catalogs; optional `provider.model` is passed through only when
-present.
-
-## Validate Existing Campaign
-
-```bash
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" validate
-```
-
-## Dry-Run Render
-
-```bash
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" render \
-  --dry-run
-```
-
-Expected output:
+This skill is state-driven. Do not ask users to add assets through commands.
+Agents may use bundled scripts as private helpers, but the user-facing workflow
+is always:
 
 ```text
-<metadata artifacts.scratch>/<campaign>/
-├── *.svg
-├── manifest.json
-└── run.lock.json
+plan -> produce candidates -> user accepts exact candidates -> record state -> next production
 ```
 
-## Live Render With Image Skill CLI
+## State Sources
 
-Confirm with the user before running because this calls the configured image API
-through the local image skill/CLI and can incur cost. `brand.lock.yaml` should
-set `provider.gateway` to `gpt-image-skill` or its alias `skill-cli`. If
-`provider.model` is omitted, this skill does not pass `--model`; the underlying
-image CLI chooses its default.
+Start each task by reading the product repo's metadata and state files:
 
-```bash
-command -v gpt-image || true
-test -f ~/.codex/skills/gpt-image/scripts/generate.py && echo "gpt-image skill installed"
+- `brand.lock.yaml`: frozen product brand style.
+- `campaigns/`: campaign inputs.
+- `references/`: local reference assets.
+- `accepted.yaml`: user-accepted assets and patterns from prior cycles.
+- `artifacts.scratch`: temporary candidate output.
+- `artifacts.approved`: durable files copied only after acceptance.
 
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" render
-```
+When metadata declares portfolio or related-product sources, treat them as
+read-only context. Prefer local checkouts or local caches. If remote GitHub or
+GitLab access is needed, fetch only the declared files and pin resolved commits
+in the plan. Do not copy other repos into the current product repo.
 
-Expected output:
+## Planning
+
+Write a production plan before rendering. A plan should capture:
+
+- objective and audience
+- current portfolio/product state used
+- accepted examples considered
+- related products or registry sources consulted
+- campaign file path
+- brand lock path and version
+- candidate deliverables
+- cost/risk notes for live generation
+- acceptance criteria
+
+Store plans under metadata `state.plans`, for example:
 
 ```text
-<metadata artifacts.scratch>/<campaign>/
-├── *.png
-├── manifest.json
-└── run.lock.json
+packages/branding/marketing/plans/<campaign>.plan.yaml
 ```
 
-This is only the local render buffer. Do not publish it yet unless the user
-explicitly pre-approved auto-publish after render. Inspect the assets and ask
-for human acceptance before any `--publish` command.
+Plans are source state. They are not generated image artifacts.
 
-## Publish To Repo
+## Production
 
-Only enter this step after the user accepts the rendered assets, or when the
-user explicitly asked to auto-publish after render. API-cost approval is not
-asset approval.
+Validate inputs and run a dry render first. Before live generation, ask the user
+to approve API usage and cost. Live generation writes candidate files only under
+`artifacts.scratch`.
 
-Dry-run:
+Candidates are not durable brand memory. They remain scratch until the user
+accepts specific outputs.
 
-```bash
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" publish
+Review candidates for:
+
+- brand lock fit
+- text quality and legibility
+- dimensions and file format
+- consistency with accepted examples
+- whether the asset should influence future generations
+
+## Acceptance
+
+Ask the user to identify exactly which candidate files are accepted. Acceptance
+must name concrete files or asset ids from the current render. Do not infer
+acceptance from API-cost approval or from a successful render.
+
+For each accepted candidate:
+
+1. Copy the file into `artifacts.approved`.
+2. Copy or reference its manifest entry.
+3. Record an `accepted.yaml` entry with campaign, asset id, path, checksum,
+   tags, notes, and source run lock path.
+4. If the asset reveals a reusable pattern, update `elements.yaml` or a
+   portfolio proposal separately.
+
+Rejected or unreviewed candidates stay in scratch and should not feed future
+planning.
+
+## Accepted Corpus Shape
+
+Use append-only entries unless the user explicitly asks to correct an existing
+record:
+
+```yaml
+schema_version: "1.0"
+owner:
+  kind: "brand"
+  portfolio_id: "codefox"
+  id: "kobe"
+revision: 3
+accepted:
+  - id: "launch-web-banner-2026-06-19"
+    kind: "artifact"
+    campaign: "launch"
+    asset_id: "web-banner"
+    path: "packages/branding/public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/web-banner.png"
+    manifest: "packages/branding/public/marketing/products/codefox/kobe/1.2.0/artifacts/launch/manifest.json"
+    run_lock: "packages/branding/.harness/out/launch/run.lock.json"
+    checksum_sha256: "..."
+    tags: ["launch", "web-banner", "accepted"]
+    notes: "Accepted by the user for the launch campaign."
 ```
 
-Write versioned artifacts:
+Use tags and notes to help future agents understand why an asset matters.
+Avoid long aesthetic essays in accepted state; keep deeper reasoning in the
+plan or review notes.
 
-```bash
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" publish --publish
-```
+## Next Cycle
 
-Expected output:
+Future plans must read `accepted.yaml` before proposing new assets. The corpus
+is how the skill learns from prior accepted work. Related repo assets should be
+read the same way: through their metadata, accepted state, manifests, and
+selected reference files, not through ad hoc descriptions.
 
-```text
-<metadata artifacts.approved>/products/<portfolio-id>/<brand-id>/<brand-lock-version>/
-└── artifacts/feature-x-launch/
-    ├── *.png
-    ├── manifest.json
-    └── run.lock.json
-```
-
-The approved asset directory may be a public package directory, a separate
-asset repository, or a git submodule inside the product repo. The harness does
-not edit `.gitattributes`, run `git add`, commit, or push; commit the asset
-repo/submodule after reviewing the snapshot.
-
-## Produce Style Proposal
-
-Use this when a design skill, Claude, or Codex is responsible for style production.
-
-Design skill routing is intentionally fuzzy:
-
-- If the user writes a hint after an explicit skill mention such as `$marketing-harness`, honor it first, for example "use local frontend-design" or "prefer claude-design".
-- If the user does not name one, use an already-installed local design skill that fits brand/frontend/visual design.
-- If none is available, stop. Do not install, clone, or download a fallback unless the user explicitly asks.
-- Write the resulting proposal to `packages/branding/marketing/proposals/<brand-name>.lock.yaml` or the metadata-equivalent proposal path.
-
-Then validate:
-
-```bash
-python3 "$HARNESS_SCRIPT" --metadata "$HARNESS_METADATA" validate \
-  --brand packages/branding/marketing/proposals/<brand-name>.lock.yaml
-```
-
-Run a dry-run render before promotion:
-
-```bash
-python3 "$HARNESS_SCRIPT" render \
-  --metadata "$HARNESS_METADATA" \
-  --brand packages/branding/marketing/proposals/<brand-name>.lock.yaml \
-  --dry-run
-```
-
-Promote only after user review by copying the accepted proposal to the official
-metadata-declared `brand.lock.yaml` path.
+Never treat rejected candidates or scratch output as brand memory.

@@ -41,6 +41,10 @@ def metadata(root: Path) -> dict[str, object]:
             "scratch": "packages/branding/.harness/out",
             "approved": "packages/branding/public/marketing",
         },
+        "state": {
+            "plans": "packages/branding/marketing/plans",
+            "accepted": "packages/branding/marketing/accepted.yaml",
+        },
     }
 
 
@@ -66,23 +70,6 @@ def test_metadata_supplies_validate_and_render_paths(tmp_path: Path) -> None:
     ]
 
 
-def test_metadata_defaults_publish_to_repo_channel(tmp_path: Path) -> None:
-    launcher = load_launcher()
-
-    publish_args = launcher.apply_metadata_args(["publish"], metadata(tmp_path))
-
-    assert publish_args == [
-        "publish",
-        "launch",
-        "--outputs-dir",
-        str(tmp_path / "packages/branding/.harness/out"),
-        "--channel",
-        "repo",
-        "--repo-dir",
-        str(tmp_path / "packages/branding/public/marketing"),
-    ]
-
-
 def test_metadata_project_paths_are_root_relative(tmp_path: Path) -> None:
     launcher = load_launcher()
 
@@ -91,6 +78,8 @@ def test_metadata_project_paths_are_root_relative(tmp_path: Path) -> None:
     assert paths["marketing_root"] == tmp_path / "packages/branding/marketing"
     assert paths["campaigns_dir"] == tmp_path / "packages/branding/marketing/campaigns"
     assert paths["references_dir"] == tmp_path / "packages/branding/marketing/references"
+    assert paths["plans_dir"] == tmp_path / "packages/branding/marketing/plans"
+    assert paths["accepted_state"] == tmp_path / "packages/branding/marketing/accepted.yaml"
 
 
 def test_launcher_resolves_to_bundled_cli() -> None:
@@ -108,6 +97,8 @@ def test_bootstrap_is_dry_run_until_write(
     launcher = load_launcher()
     meta = metadata(tmp_path)
     marketing_root = tmp_path / "packages/branding/marketing"
+    plans = tmp_path / "packages/branding/marketing/plans"
+    accepted_parent = tmp_path / "packages/branding/marketing"
     scratch = tmp_path / "packages/branding/.harness/out"
 
     assert launcher.bootstrap_project([str(tmp_path)], meta, "marketing.harness.yaml") == 0
@@ -120,8 +111,22 @@ def test_bootstrap_is_dry_run_until_write(
         == 0
     )
     assert marketing_root.is_dir()
+    assert plans.is_dir()
+    assert accepted_parent.is_dir()
     assert scratch.is_dir()
     assert "mode=write" in capsys.readouterr().out
+
+
+def test_publish_is_not_a_user_facing_command() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(ROOT / "skills/marketing-harness/scripts/cli.py"), "--help"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0
+    assert "publish" not in completed.stdout
 
 
 def test_render_dry_run_uses_bundled_scripts(tmp_path: Path) -> None:

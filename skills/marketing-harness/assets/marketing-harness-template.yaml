@@ -16,7 +16,11 @@ artifacts:
   scratch: packages/branding/.harness/out
   approved: packages/branding/public/marketing
 
+state:
+  plans: packages/branding/marketing/plans
+  accepted: packages/branding/marketing/accepted.yaml
+
 policy:
   requireHumanApprovalBeforeRender: true
-  requireHumanApprovalBeforePublish: true
+  requireHumanApprovalBeforeStateUpdate: true
   allowRootWorkspaceBootstrap: false

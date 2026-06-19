@@ -14,5 +14,5 @@ elements:
   - id: "versioned-artifact-stack"
     type: "motif"
     status: "accepted"
-    tags: ["manifest", "release", "repo-publish"]
-    description: "Neatly stacked published assets paired with a manifest or version label."
+    tags: ["manifest", "accepted-state", "versioned-assets"]
+    description: "Neatly stacked accepted assets paired with a manifest or version label."

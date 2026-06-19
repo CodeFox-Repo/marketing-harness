@@ -2,9 +2,9 @@
 name: marketing-harness
 description: >-
   Use this skill to operate thin marketing-harness scripts from a product repo:
-  read YAML/JSON metadata, validate brand.lock/campaign YAML, dry-run or render
-  through a local image skill/CLI provider, and publish only reviewed marketing
-  artifacts into repo-owned public assets.
+  read YAML/JSON metadata, plan brand-locked campaigns, validate brand.lock and
+  campaign YAML, render candidates through a local image skill/CLI provider,
+  and record only user-accepted assets into repo-owned brand state.
 ---
 
 # Marketing Harness
@@ -18,11 +18,16 @@ and `agents/`.
 Preserve the boundary:
 
 ```text
-brand memory -> brand.lock.yaml -> campaign.yaml -> render -> human asset review -> publish
+brand state -> production plan -> generated candidates -> user acceptance -> accepted state -> next production
 ```
 
 Never put visual style prompt text in campaign files. Campaigns describe content
 and deliverables only.
+
+Do not model asset collection as a user-facing command surface. Assets enter
+the durable corpus only when a user accepts generated candidates or explicitly
+marks existing work as accepted during review. Treat low-level scripts as
+internal agent helpers, not as instructions for users to add assets manually.
 
 ## Metadata First
 
@@ -51,9 +56,13 @@ artifacts:
   scratch: packages/branding/.harness/out
   approved: packages/branding/public/marketing
 
+state:
+  plans: packages/branding/marketing/plans
+  accepted: packages/branding/marketing/accepted.yaml
+
 policy:
   requireHumanApprovalBeforeRender: true
-  requireHumanApprovalBeforePublish: true
+  requireHumanApprovalBeforeStateUpdate: true
   allowRootWorkspaceBootstrap: false
 ```
 
@@ -70,7 +79,10 @@ Keep these roots separate:
   `packages/branding/marketing`.
 - **Scratch output:** the product-owned temporary render location from metadata,
   such as `packages/branding/.harness/out`.
-- **Approved assets:** the product-owned location for reviewed public assets.
+- **Approved assets:** the product-owned location for user-accepted generated
+  files.
+- **Accepted state:** the product-owned accepted corpus, usually
+  `packages/branding/marketing/accepted.yaml`.
 - **Skill root:** this installed `skills/marketing-harness` folder.
 
 Do not create root-level `workspace/`, `outputs/`, `published/`, or `releases/`
@@ -85,41 +97,20 @@ python3 "$SKILL_ROOT/scripts/harness.py"
 It runs the bundled scripts in this skill. There is no `uvx` remote runtime
 fallback and no ancestor checkout discovery.
 
-Run the initial check from the project root:
-
-```bash
-sh "$SKILL_ROOT/scripts/check_harness.sh" --metadata packages/branding/marketing.harness.yaml .
-```
-
-In command examples below, `$HARNESS` means the launcher command above. It runs
-while keeping relative paths rooted in the current product repo.
-
-For a fresh product repo, preview the local project folders:
-
-```bash
-sh "$SKILL_ROOT/scripts/bootstrap_project.sh" --metadata packages/branding/marketing.harness.yaml .
-```
-
-Add `--write` only after reviewing the plan:
-
-```bash
-sh "$SKILL_ROOT/scripts/bootstrap_project.sh" --metadata packages/branding/marketing.harness.yaml --write .
-```
-
-The bootstrap script is create-only. It does not edit `.gitignore` or
-`.gitattributes`, and it does not delete existing files. Use `--with-example`
-only when the user explicitly wants the bundled CodeFox example copied under
-the metadata marketing root.
+Use `scripts/check_harness.sh` and `scripts/bootstrap_project.sh` only as
+internal setup helpers. Bootstrap is create-only, dry-run by default, and must
+show the user the planned directories before any write.
 
 ## Common Defaults
 
 - Always dry-run before live render.
-- Publish channel is `repo`.
 - Do not commit automatically.
-- Do not call image APIs or publish until the user has approved the cost/action.
+- Do not call image APIs until the user has approved the cost/action.
+- Do not update accepted state until the user has accepted specific generated
+  candidates.
 
-For exact command sequences, read `references/workflows.md`. For schema
-contracts, read `references/contracts.md`.
+For the lifecycle, read `references/workflows.md`. For schema contracts, read
+`references/contracts.md`.
 
 ## Style Production
 
@@ -139,20 +130,13 @@ Selection order for design producers:
 Do not download, clone, or install a remote design skill as an implicit fallback.
 Proposal review flow:
 
-```bash
-$HARNESS validate --metadata packages/branding/marketing.harness.yaml \
-  --brand packages/branding/marketing/proposals/<name>.lock.yaml
+1. Write the proposal under the metadata-declared marketing root.
+2. Validate it with the bundled helper.
+3. Dry-render against a representative campaign.
+4. Ask the user to review the proposal and candidates.
+5. Only after review, update the official `brand.lock.yaml` path.
 
-$HARNESS render \
-  --metadata packages/branding/marketing.harness.yaml \
-  --brand packages/branding/marketing/proposals/<name>.lock.yaml \
-  --dry-run
-```
-
-Only after review should the user or agent copy the accepted proposal to the
-official `brand.lock.yaml` path.
-
-## Rendering And Publishing
+## Production Lifecycle
 
 Before live render, confirm API usage and possible cost. The harness has one
 live image entrypoint: a local image skill/CLI. Its credentials belong in the
@@ -161,36 +145,22 @@ the local `gpt-image` CLI is installed or `HARNESS_SKILL_CLI_COMMAND` points to
 an equivalent command. `provider.model` is optional; when omitted, this skill
 does not pass `--model` and lets the image provider choose its default.
 
-Live generation:
+Use this loop:
 
-```bash
-$HARNESS validate --metadata packages/branding/marketing.harness.yaml
-$HARNESS render --metadata packages/branding/marketing.harness.yaml
-```
-
-After live render, inspect generated files, dimensions, text quality,
-`manifest.json`, and `run.lock.json`. Show output paths and ask for explicit
-human asset acceptance before any command with `--publish`, unless the user
-explicitly pre-approved auto-publish.
-
-After acceptance:
-
-```bash
-$HARNESS publish --metadata packages/branding/marketing.harness.yaml --publish
-```
+1. Read current portfolio/product state, accepted corpus, references, and
+   related repo indexes declared by metadata.
+2. Write or update a production plan under `state.plans`.
+3. Validate the plan inputs and run a dry render.
+4. Ask the user to approve live generation cost.
+5. Generate candidates into `artifacts.scratch`.
+6. Show candidate paths, manifest, run lock, and review notes.
+7. Ask the user which exact candidates are accepted.
+8. Copy accepted files into `artifacts.approved` and update `state.accepted`.
+9. Use the updated accepted state as input for the next production cycle.
 
 The approved asset directory should come from metadata. It may be a public
-package directory, a separate asset git repository, or a submodule. The repo
-publish channel stores generated assets, `manifest.json`, and `run.lock.json`
-there. It never edits `.gitattributes` and never runs `git add`, `commit`, or
-`push`.
-
-Safe smoke test:
-
-```bash
-$HARNESS render --metadata packages/branding/marketing.harness.yaml --dry-run
-$HARNESS publish --metadata packages/branding/marketing.harness.yaml
-```
+package directory, a separate asset git repository, or a submodule. The skill
+never edits `.gitattributes` and never runs `git add`, `commit`, or `push`.
 
 ## Verification
 

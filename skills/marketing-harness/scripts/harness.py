@@ -10,13 +10,11 @@ from typing import Any
 
 VALUE_FLAGS = {
     "--brand",
-    "--channel",
     "--outputs-dir",
-    "--repo-dir",
 }
 DEFAULT_MARKETING_ROOT = "marketing"
 DEFAULT_SCRATCH_DIR = ".harness/out"
-DEFAULT_APPROVED_DIR = "marketing/published"
+DEFAULT_APPROVED_DIR = "marketing/approved"
 
 
 def main() -> int:
@@ -69,25 +67,6 @@ def apply_metadata_args(args: list[str], metadata: dict[str, Any]) -> list[str]:
             metadata_path(metadata, project_root, "artifacts", "scratch"),
         )
 
-    if command == "publish":
-        campaign_name = string_at(metadata, "campaign", "name") or string_at(
-            metadata, "campaign", "id"
-        )
-        if campaign_name and not has_positional(next_args, start=1):
-            next_args.insert(1, campaign_name)
-        add_option(
-            next_args,
-            "--outputs-dir",
-            metadata_path(metadata, project_root, "artifacts", "scratch"),
-        )
-        add_option(next_args, "--channel", string_at(metadata, "publish", "channel") or "repo")
-        add_option(
-            next_args,
-            "--repo-dir",
-            metadata_path(metadata, project_root, "artifacts", "approved")
-            or metadata_path(metadata, project_root, "publish", "repoDir"),
-        )
-
     return next_args
 
 
@@ -119,8 +98,10 @@ def bootstrap_project(args: list[str], metadata: dict[str, Any], metadata_path: 
         plan["marketing_root"],
         plan["campaigns_dir"],
         plan["references_dir"],
+        plan["plans_dir"],
         plan["scratch_dir"],
         plan["approved_dir"],
+        plan["accepted_state"].parent,
     ]
 
     if write:
@@ -137,8 +118,10 @@ def bootstrap_project(args: list[str], metadata: dict[str, Any], metadata_path: 
             "marketing_root": plan["marketing_root"],
             "campaigns_dir": plan["campaigns_dir"],
             "references_dir": plan["references_dir"],
+            "plans_dir": plan["plans_dir"],
             "scratch_dir": plan["scratch_dir"],
             "approved_dir": plan["approved_dir"],
+            "accepted_state": plan["accepted_state"],
             "created": " ".join(str(path) for path in dirs) if write else "",
             "copied_example": str(plan["marketing_root"] / "examples" / "codefox")
             if write and with_example
@@ -180,6 +163,9 @@ def check_project(args: list[str], metadata: dict[str, Any], metadata_path: str 
             else False,
             "scratch_dir": paths["scratch_dir"],
             "approved_dir": paths["approved_dir"],
+            "plans_dir": paths["plans_dir"],
+            "accepted_state": paths["accepted_state"],
+            "accepted_state_exists": paths["accepted_state"].exists(),
             "bundled_cli": Path(__file__).resolve().parent / "cli.py",
             "yaml_ready": yaml_ready,
             "image_cli": image_cli,
@@ -199,8 +185,10 @@ def print_plan(metadata: dict[str, Any]) -> None:
             "marketing_root": paths["marketing_root"],
             "campaigns_dir": paths["campaigns_dir"],
             "references_dir": paths["references_dir"],
+            "plans_dir": paths["plans_dir"],
             "scratch_dir": paths["scratch_dir"],
             "approved_dir": paths["approved_dir"],
+            "accepted_state": paths["accepted_state"],
             "brand_lock": metadata_path_value(metadata, "brand", "lock") or "",
             "campaign": metadata_path_value(metadata, "campaign", "path") or "",
             "allow_root_workspace_bootstrap": bool_at(
@@ -216,6 +204,14 @@ def project_paths(metadata: dict[str, Any], project_root: Path) -> dict[str, Pat
     )
     scratch_dir = path_at(metadata, project_root, DEFAULT_SCRATCH_DIR, "artifacts", "scratch")
     approved_dir = path_at(metadata, project_root, DEFAULT_APPROVED_DIR, "artifacts", "approved")
+    plans_dir = path_at(metadata, project_root, "marketing/plans", "state", "plans")
+    accepted_state = path_at(
+        metadata,
+        project_root,
+        "marketing/accepted.yaml",
+        "state",
+        "accepted",
+    )
     campaigns_value = metadata_path_value(metadata, "brand", "campaigns")
     references_value = metadata_path_value(metadata, "brand", "references")
     campaigns_dir = (
@@ -232,6 +228,8 @@ def project_paths(metadata: dict[str, Any], project_root: Path) -> dict[str, Pat
         "marketing_root": marketing_root,
         "scratch_dir": scratch_dir,
         "approved_dir": approved_dir,
+        "plans_dir": plans_dir,
+        "accepted_state": accepted_state,
         "campaigns_dir": campaigns_dir,
         "references_dir": references_dir,
     }
