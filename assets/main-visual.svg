@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Marketing asset workflow main visual</title>
+  <desc id="desc">A technical visual showing locked rules resolving producer skills into accepted campaign assets.</desc>
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ded8ca" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0d151d" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .bg { fill: #f7f2e7; }
+      .grid { fill: url(#grid); }
+      .ink { fill: #111820; }
+      .panel { fill: #121a22; stroke: #0d151d; stroke-width: 3; }
+      .paper { fill: #fbf6eb; stroke: #111820; stroke-width: 3; }
+      .mint { fill: #36d8a4; }
+      .mint-soft { fill: #dff5ec; stroke: #75bea4; stroke-width: 2; }
+      .amber { fill: #ffb21a; }
+      .coral { fill: #ec4860; }
+      .line { fill: none; stroke: #45c69f; stroke-width: 10; stroke-linecap: round; }
+      .line-dark { fill: none; stroke: #111820; stroke-width: 3; stroke-linecap: round; }
+      .hair { fill: none; stroke: #83919a; stroke-width: 2; }
+      .label { fill: #111820; font: 700 22px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
+      .small { fill: #111820; font: 600 15px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .03em; }
+      .small-light { fill: #e9f4ef; font: 600 15px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .03em; }
+      .tiny { fill: #68747c; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .tiny-light { fill: #aebbc4; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="900"/>
+  <rect class="grid" x="42" y="42" width="1516" height="816"/>
+  <rect x="58" y="56" width="1484" height="788" rx="22" fill="none" stroke="#111820" stroke-width="3"/>
+
+  <text class="small" x="92" y="106">INPUT: LOCKED RULES</text>
+  <text class="small" x="646" y="106">RESOLVE: CAPABILITIES TO APPROVED SKILLS</text>
+  <text class="small" x="1240" y="106">OUTPUT: ACCEPTED ASSETS</text>
+
+  <g filter="url(#shadow)">
+    <rect class="panel" x="78" y="140" width="260" height="560" rx="10"/>
+    <text class="small-light" x="108" y="178">DESIGN TOKENS</text>
+    <g transform="translate(106 206)">
+      <rect x="0" y="0" width="204" height="70" rx="6" fill="#17222c" stroke="#70808a"/>
+      <text class="tiny-light" x="18" y="28">COLOR</text>
+      <rect class="mint-soft" x="18" y="40" width="22" height="20"/>
+      <rect fill="#fbf6eb" stroke="#d8d0c0" x="52" y="40" width="22" height="20"/>
+      <rect class="coral" x="86" y="40" width="22" height="20"/>
+      <rect class="amber" x="120" y="40" width="22" height="20"/>
+    </g>
+    <g transform="translate(106 294)">
+      <rect x="0" y="0" width="204" height="70" rx="6" fill="#17222c" stroke="#70808a"/>
+      <text class="tiny-light" x="18" y="28">TYPOGRAPHY</text>
+      <path class="hair" d="M18 46h150 M18 56h96"/>
+    </g>
+    <g transform="translate(106 382)">
+      <rect x="0" y="0" width="204" height="70" rx="6" fill="#17222c" stroke="#70808a"/>
+      <text class="tiny-light" x="18" y="28">SPACING</text>
+      <path class="hair" d="M20 54h164"/>
+      <circle class="mint" cx="48" cy="54" r="4"/>
+      <circle class="amber" cx="92" cy="54" r="4"/>
+      <circle class="coral" cx="136" cy="54" r="4"/>
+    </g>
+    <g transform="translate(106 470)">
+      <rect x="0" y="0" width="204" height="70" rx="6" fill="#17222c" stroke="#70808a"/>
+      <text class="tiny-light" x="18" y="28">POLICY</text>
+      <path class="hair" d="M18 48h150"/>
+      <path class="hair" d="M18 58h126"/>
+    </g>
+    <rect x="104" y="628" width="206" height="42" rx="6" fill="#10281f" stroke="#36d8a4"/>
+    <text class="tiny-light" x="126" y="654">VERSIONED - LOCKED</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect class="mint-soft" x="372" y="158" width="228" height="430" rx="10"/>
+    <text class="small" x="402" y="196">ORG RULES</text>
+    <g transform="translate(402 226)">
+      <rect class="paper" x="0" y="0" width="168" height="44" rx="6"/>
+      <text class="tiny" x="18" y="28">skills.yaml</text>
+      <rect class="paper" x="0" y="64" width="168" height="44" rx="6"/>
+      <text class="tiny" x="18" y="92">policy.yaml</text>
+      <rect class="paper" x="0" y="128" width="168" height="44" rx="6"/>
+      <text class="tiny" x="18" y="156">templates/</text>
+    </g>
+    <rect x="402" y="470" width="168" height="72" rx="6" fill="#edf8f3" stroke="#75bea4"/>
+    <text class="tiny" x="420" y="500">SUBMODULE</text>
+    <text class="tiny" x="420" y="522">single source</text>
+  </g>
+
+  <path class="line" d="M600 374 C650 374 664 286 718 286"/>
+  <path class="line-dark" d="M600 374 C650 374 664 286 718 286"/>
+  <circle class="mint-soft" cx="600" cy="374" r="16"/>
+  <circle class="mint-soft" cx="718" cy="286" r="16"/>
+
+  <g filter="url(#shadow)">
+    <rect class="panel" x="704" y="142" width="468" height="468" rx="12"/>
+    <text class="small-light" x="736" y="182">SKILL REGISTRY RESOLVER</text>
+    <rect x="736" y="220" width="404" height="78" rx="8" fill="#dfeee6"/>
+    <text class="tiny" x="774" y="266">LOAD</text>
+    <text class="tiny" x="862" y="266">VALIDATE</text>
+    <text class="tiny" x="970" y="266">RESOLVE</text>
+    <text class="tiny" x="1072" y="266">INJECT</text>
+    <path class="line-dark" d="M824 242h42 M930 242h42 M1034 242h42"/>
+
+    <text class="tiny-light" x="742" y="340">CAPABILITY KEY</text>
+    <text class="tiny-light" x="912" y="340">RESOLVED SKILL</text>
+    <text class="tiny-light" x="1082" y="340">STATUS</text>
+    <g transform="translate(742 362)">
+      <rect x="0" y="0" width="142" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="14" y="21">image</text>
+      <path class="hair" d="M154 16h36"/>
+      <rect x="206" y="0" width="152" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="220" y="21">gpt-image</text>
+      <rect x="374" y="0" width="88" height="32" rx="5" fill="#2c2307" stroke="#ffb21a"/>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700" x="390" y="21">APPROVED</text>
+    </g>
+    <g transform="translate(742 416)">
+      <rect x="0" y="0" width="142" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="14" y="21">slide</text>
+      <path class="hair" d="M154 16h36"/>
+      <rect x="206" y="0" width="152" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="220" y="21">presentations</text>
+      <rect x="374" y="0" width="88" height="32" rx="5" fill="#2c2307" stroke="#ffb21a"/>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700" x="390" y="21">APPROVED</text>
+    </g>
+    <g transform="translate(742 470)">
+      <rect x="0" y="0" width="142" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="14" y="21">rules</text>
+      <path class="hair" d="M154 16h36"/>
+      <rect x="206" y="0" width="152" height="32" rx="5" fill="#17222c" stroke="#9eb2ba"/>
+      <text class="tiny-light" x="220" y="21">local file</text>
+      <rect x="374" y="0" width="88" height="32" rx="5" fill="#2c2307" stroke="#ffb21a"/>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700" x="398" y="21">PINNED</text>
+    </g>
+  </g>
+
+  <path class="line" d="M1172 374 C1218 374 1218 228 1264 228"/>
+  <path class="line" d="M1172 374 C1218 374 1218 392 1264 392"/>
+  <path class="line" d="M1172 374 C1218 374 1218 556 1264 556"/>
+  <circle class="mint-soft" cx="1172" cy="374" r="16"/>
+  <circle class="mint-soft" cx="1264" cy="228" r="16"/>
+  <circle class="mint-soft" cx="1264" cy="392" r="16"/>
+  <circle class="mint-soft" cx="1264" cy="556" r="16"/>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(1268 142)">
+      <rect class="panel" x="0" y="0" width="258" height="112" rx="8"/>
+      <rect class="paper" x="18" y="18" width="80" height="76"/>
+      <circle class="mint-soft" cx="58" cy="48" r="18"/>
+      <rect class="coral" x="18" y="72" width="28" height="22"/>
+      <text class="small-light" x="118" y="38">LAUNCH</text>
+      <text class="tiny-light" x="118" y="64">web banner</text>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" x="118" y="92">ACCEPTED</text>
+    </g>
+    <g transform="translate(1268 306)">
+      <rect class="panel" x="0" y="0" width="258" height="112" rx="8"/>
+      <rect class="paper" x="18" y="18" width="80" height="76"/>
+      <rect class="amber" x="18" y="60" width="42" height="34"/>
+      <circle class="mint-soft" cx="70" cy="42" r="15"/>
+      <text class="small-light" x="118" y="38">SOCIAL</text>
+      <text class="tiny-light" x="118" y="64">square post</text>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" x="118" y="92">ACCEPTED</text>
+    </g>
+    <g transform="translate(1268 470)">
+      <rect class="panel" x="0" y="0" width="258" height="112" rx="8"/>
+      <rect class="paper" x="18" y="18" width="80" height="76"/>
+      <rect class="mint" x="18" y="66" width="80" height="28"/>
+      <rect class="ink" x="52" y="32" width="46" height="24"/>
+      <text class="small-light" x="118" y="38">HERO</text>
+      <text class="tiny-light" x="118" y="64">main visual</text>
+      <text fill="#ffcf6d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" x="118" y="92">ACCEPTED</text>
+    </g>
+    <rect x="1268" y="642" width="258" height="74" rx="8" fill="#ffe0d8" stroke="#ec4860" stroke-width="3"/>
+    <text class="small" x="1300" y="684">APPROVED ASSET SHELF</text>
+  </g>
+
+  <g transform="translate(98 772)">
+    <text class="small" x="0" y="0">SOURCE</text>
+    <path class="line-dark" d="M92 -7h70"/>
+    <text class="small" x="182" y="0">RESOLVE</text>
+    <path class="line-dark" d="M294 -7h70"/>
+    <text class="small" x="384" y="0">PRODUCE</text>
+    <path class="line-dark" d="M504 -7h70"/>
+    <text class="small" x="594" y="0">ACCEPT</text>
+    <path class="line-dark" d="M704 -7h70"/>
+    <text class="small" x="794" y="0">PUBLISH</text>
+  </g>
+</svg>

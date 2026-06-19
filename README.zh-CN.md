@@ -1,5 +1,7 @@
 # Marketing Harness Skill
 
+![Marketing asset workflow visual](assets/main-visual.svg)
+
 [English](README.md)
 
 Marketing Harness 是一个可安装的 agent skill，用来规划和沉淀“主题风格锁定”的宣发资产。安装一次后，在任意业务 repo 里唤起它；agent 会校验视觉 token、准备 campaign、导出给第三方素材生产 skill 使用的 dry-run 上下文，并只把人工验收过的资产沉淀到当前业务 repo 的视觉资产状态里。

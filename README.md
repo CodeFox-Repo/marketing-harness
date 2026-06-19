@@ -1,5 +1,7 @@
 # Marketing Harness Skill
 
+![Marketing asset workflow visual](assets/main-visual.svg)
+
 [简体中文](README.zh-CN.md)
 
 Marketing Harness is an installable agent skill for producing theme-locked
