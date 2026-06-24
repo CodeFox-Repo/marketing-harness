@@ -6,6 +6,7 @@
 /outputs/
 /published/
 /releases/
+**/.harness/out/
 __pycache__/
 *.py[cod]
 .pytest_cache/
