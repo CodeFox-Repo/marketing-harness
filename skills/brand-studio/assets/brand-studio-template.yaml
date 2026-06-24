@@ -18,27 +18,14 @@ theme:
   campaigns: assets/marketing/campaigns
   references: assets/marketing/references
 
-producers:
-  image:
-    kind: external-skill
-    preferred: []
-    allowAutoInstall: false
-  design:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  slide:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  logo:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  social:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
+skills:
+  # Bind each capability to a locally installed producer skill (by name).
+  # Leave a value empty until you have selected and installed that producer.
+  image: ""
+  design: ""
+  slide: ""
+  logo: ""
+  social: ""
 
 campaign:
   name: launch

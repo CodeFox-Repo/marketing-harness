@@ -70,27 +70,14 @@ theme:
   campaigns: assets/marketing/campaigns
   references: assets/marketing/references
 
-producers:
-  image:
-    kind: external-skill
-    preferred: []
-    allowAutoInstall: false
-  design:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  slide:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  logo:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  social:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
+skills:
+  # Bind each capability to a locally installed producer skill (by name).
+  # Leave a value empty until you have selected and installed that producer.
+  image: ""
+  design: ""
+  slide: ""
+  logo: ""
+  social: ""
 
 campaign:
   name: launch
@@ -200,8 +187,8 @@ Proposal review flow:
 Before live generation, confirm API usage, possible cost, and the exact
 external producer skill. The harness treats third-party production skills as
 local producer capabilities, not vendored dependencies. It does not wrap GPT,
-OpenAI, or any image API. Declare producers in metadata, then use only locally
-installed or explicitly configured producers. Do not auto-download,
+OpenAI, or any image API. Bind producer skills in metadata under `skills`, then
+use only locally installed or explicitly configured producers. Do not auto-download,
 auto-install, or silently switch production producers. Credentials belong to
 the selected producer's environment; never print, commit, or copy them into
 configuration files. `producer.model` is an optional hint; the selected
@@ -243,8 +230,8 @@ After code or workflow changes:
 uv run ruff check .
 uv run pytest
 cd skills/brand-studio/examples/codefox
-python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate
-python3 ../../scripts/harness.py --metadata marketing.harness.yaml render --dry-run
+uv run python ../../scripts/harness.py --metadata marketing.harness.yaml validate
+uv run python ../../scripts/harness.py --metadata marketing.harness.yaml render --dry-run
 ```
 
 Check that no API key, authorization header, machine-specific path, or raw image

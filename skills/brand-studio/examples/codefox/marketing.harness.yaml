@@ -18,27 +18,10 @@ theme:
   campaigns: packages/branding/marketing/campaigns
   references: packages/branding/marketing/references
 
-producers:
-  image:
-    kind: external-skill
-    preferred: []
-    allowAutoInstall: false
-  design:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  slide:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  logo:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
-  social:
-    kind: local-skill
-    preferred: []
-    allowAutoInstall: false
+skills:
+  # Each capability binds to a locally installed producer skill by name.
+  image: gpt-image
+  slide: presentations
 
 campaign:
   name: example

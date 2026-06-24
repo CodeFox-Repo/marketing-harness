@@ -123,8 +123,8 @@ python3 "$SKILL_ROOT/scripts/harness.py" --metadata path/to/marketing.harness.ya
 ```
 
 第三方素材生产 skill 按本地 capability 管理，不作为 Brand Studio 自己
-vendored 的依赖。`producers.image`、`producers.slide`、`producers.logo`、
-`producers.social` 可以声明优先使用的本地 skill 或命令。agent 不能自动安装，
+vendored 的依赖。`skills` 映射把每个能力 key（`image`、`design`、`slide`、
+`logo`、`social`）直接绑定到本地已安装的 producer skill 名。agent 不能自动安装，
 也不能静默切换 producer。
 
 ## Theme Contract
@@ -194,7 +194,7 @@ uv sync
 uv run ruff check .
 uv run pytest
 cd skills/brand-studio/examples/codefox
-python3 ../../scripts/harness.py --metadata marketing.harness.yaml validate
+uv run python ../../scripts/harness.py --metadata marketing.harness.yaml validate
 ```
 
 skill payload 形态靠人工 review 维护：保持 `SKILL.md`、`scripts/`、
