@@ -44,16 +44,16 @@ asset repo; cross-person defaults belong in the fork.
 ## Image-First Init, Metadata Underneath
 
 For a new product repo, prefer image-first initialization when the user supplies
-brand images, screenshots, existing marketing assets, or an image directory.
-Use the agent's native image-reading capability to infer the first brand
-direction, then write the Brand Studio files directly. Do not ask the user to
-fill out YAML or a brand brief before producing the first usable draft.
+brand images, screenshots, or existing marketing assets. Use the agent's native
+image-reading capability to infer the first brand direction, then write the
+Brand Studio files directly. Do not ask the user to fill out YAML or a brand
+brief before producing the first usable draft.
 
 Accept prompts like:
 
 ```text
 $brand-studio init this repo from the attached brand images
-$brand-studio init from ./brand-input
+$brand-studio init this repo from existing repo assets
 ```
 
 For image-first init:
@@ -70,7 +70,10 @@ For image-first init:
 4. Read the supplied images directly. Extract a compact brand direction:
    palette, typography direction, visual language, materials, lighting, mood,
    composition rules, avoid list, and initial style aliases such as
-   `launch-hero` and `social-default`.
+   `launch-hero` and `social-default`. If no images are attached, scan the
+   declared asset roots once for image files and use those as initialization
+   context. Do not add a separate init-assets path schema or per-image role
+   schema.
 5. Write `brief.md` as the human-readable rationale and `theme.md` as the
    machine-readable style lock with valid design-token frontmatter.
 6. Write `campaigns/init-preview.campaign.yaml` as a representative preview.
