@@ -1012,6 +1012,179 @@ deliverables:
     assert "1008x640" in completed.stderr
 
 
+def test_producer_handoff_reports_target_prompt_and_not_generated(tmp_path: Path) -> None:
+    project = tmp_path
+    metadata_path = project / "marketing.harness.json"
+    context_dir = project / ".harness/marketing/out/release-v0-7-43"
+    context_dir.mkdir(parents=True)
+    target = context_dir / "release-card.png"
+    (context_dir / "producer-context.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "kind": "producer_context",
+                "capability": "image",
+                "producer_skill": "gpt-image",
+                "output_dir": str(context_dir),
+                "assets": [
+                    {
+                        "id": "release-card",
+                        "size": [1200, 640],
+                        "prompt": "Render the release notes page as the main subject.",
+                        "negative_prompt": "Do not make it a side panel.",
+                        "target_file": "release-card.png",
+                        "target_path": str(target),
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "project": {"id": "kobe", "root": str(project)},
+                "artifacts": {
+                    "scratch": ".harness/marketing/out",
+                    "approved": "public/marketing",
+                },
+                "skills": {"image": "gpt-image"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_PATH),
+            "--metadata",
+            str(metadata_path),
+            "producer-handoff",
+            "--campaign",
+            "release-v0-7-43",
+            "--asset-id",
+            "release-card",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "mode=producer-handoff" in completed.stdout
+    assert "producer_skill=gpt-image" in completed.stdout
+    assert "asset_id=release-card" in completed.stdout
+    assert "size=1200x640" in completed.stdout
+    assert f"target={target}" in completed.stdout
+    assert "target_exists=false" in completed.stdout
+    assert "not_generated_yet=true" in completed.stdout
+    assert "possible_cost=true" in completed.stdout
+    assert "prompt=Render the release notes page as the main subject." in completed.stdout
+    assert not target.exists()
+
+
+def test_asset_report_reports_scratch_file_metadata(tmp_path: Path) -> None:
+    project = tmp_path
+    metadata_path = project / "marketing.harness.json"
+    candidate = project / ".harness/marketing/out/launch/web-banner.png"
+    write_png(candidate, width=320, height=176)
+    checksum = file_sha256(candidate)
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "project": {"id": "kobe", "root": str(project)},
+                "artifacts": {
+                    "scratch": ".harness/marketing/out",
+                    "approved": "public/marketing",
+                },
+                "state": {"accepted": "assets/marketing/accepted.yaml"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_PATH),
+            "--metadata",
+            str(metadata_path),
+            "asset-report",
+            "--file",
+            str(candidate),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "mode=asset-report" in completed.stdout
+    assert f"file={candidate}" in completed.stdout
+    assert "corpus=scratch" in completed.stdout
+    assert "accepted=false" in completed.stdout
+    assert "mime_type=image/png" in completed.stdout
+    assert "size=320x176" in completed.stdout
+    assert f"checksum_sha256={checksum}" in completed.stdout
+
+
+def test_asset_report_marks_accepted_approved_asset(tmp_path: Path) -> None:
+    project = tmp_path
+    metadata_path = project / "marketing.harness.json"
+    approved = project / "public/marketing/launch/web-banner.png"
+    accepted_state = project / "assets/marketing/accepted.yaml"
+    write_png(approved, width=320, height=176)
+    checksum = file_sha256(approved)
+    accepted_state.parent.mkdir(parents=True)
+    accepted_state.write_text(
+        f"""
+schema_version: "1.0"
+accepted:
+  - campaign: "launch"
+    asset_id: "web-banner"
+    path: "public/marketing/launch/web-banner.png"
+    checksum_sha256: "{checksum}"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "project": {"id": "kobe", "root": str(project)},
+                "artifacts": {
+                    "scratch": ".harness/marketing/out",
+                    "approved": "public/marketing",
+                },
+                "state": {"accepted": "assets/marketing/accepted.yaml"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_PATH),
+            "--metadata",
+            str(metadata_path),
+            "asset-report",
+            "--file",
+            str(approved),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "corpus=approved" in completed.stdout
+    assert "accepted=true" in completed.stdout
+    assert "campaign=launch" in completed.stdout
+    assert "asset_id=web-banner" in completed.stdout
+    assert f"checksum_sha256={checksum}" in completed.stdout
+
+
 def test_accept_helper_copies_candidate_and_updates_manifest_and_state(tmp_path: Path) -> None:
     project = tmp_path
     metadata_path = project / "marketing.harness.json"
@@ -1085,6 +1258,10 @@ def test_accept_helper_copies_candidate_and_updates_manifest_and_state(tmp_path:
     )
 
     assert completed.returncode == 0, completed.stderr
+    assert "accepted=true" in completed.stdout
+    assert "corpus=approved" in completed.stdout
+    assert "mime_type=image/png" in completed.stdout
+    assert "size=320x176" in completed.stdout
     approved_file = project / "public/marketing/launch/web-banner.png"
     approved_manifest = project / "public/marketing/launch/manifest.json"
     assert approved_file.is_file()

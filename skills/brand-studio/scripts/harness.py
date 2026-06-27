@@ -92,6 +92,12 @@ def main() -> int:
     if args[:1] == ["accept"]:
         return accept_asset(args[1:], metadata, metadata_path)
 
+    if args[:1] == ["asset-report"]:
+        return asset_report(args[1:], metadata, metadata_path)
+
+    if args[:1] == ["producer-handoff"]:
+        return producer_handoff(args[1:], metadata, metadata_path)
+
     if args[:1] == ["release-campaign"]:
         return release_campaign(args[1:], metadata, metadata_path)
 
@@ -323,8 +329,135 @@ def accept_asset(args: list[str], metadata: dict[str, Any], metadata_path: str |
             "source": candidate,
             "approved": approved_file,
             "manifest": manifest_path,
-            "accepted": accepted_path,
+            "accepted_state": accepted_path,
+            "corpus": "approved",
+            "accepted": "true",
+            "mime_type": metadata_result["mime_type"],
+            "size": size_text(metadata_result["size"]),
             "checksum_sha256": actual_checksum,
+        }
+    )
+    return 0
+
+
+def asset_report(args: list[str], metadata: dict[str, Any], metadata_path: str | None) -> int:
+    usage = (
+        "usage: harness.py asset-report --metadata FILE --file FILE "
+        "[--campaign NAME] [--asset-id ID]"
+    )
+    options = parse_asset_report_options(args, usage)
+    if isinstance(options, str):
+        print(options, file=sys.stderr)
+        return 1
+
+    project_root = project_root_for(metadata)
+    paths = project_paths(metadata, project_root)
+    file_path = Path(resolve_project_path(project_root, options["file"]))
+    if not file_path.is_file():
+        print(f"{file_path}: asset file not found", file=sys.stderr)
+        return 1
+
+    report = build_asset_report(
+        metadata=metadata,
+        metadata_path=metadata_path,
+        project_root=project_root,
+        paths=paths,
+        file_path=file_path,
+        campaign_hint=str(options.get("campaign") or ""),
+        asset_id_hint=str(options.get("asset_id") or ""),
+    )
+    error = str(report.pop("error", ""))
+    if error:
+        print(error, file=sys.stderr)
+        return 1
+    print_kv(report)
+    return 0
+
+
+def producer_handoff(args: list[str], metadata: dict[str, Any], metadata_path: str | None) -> int:
+    usage = (
+        "usage: harness.py producer-handoff --metadata FILE --campaign NAME "
+        "--asset-id ID [--context FILE]"
+    )
+    options = parse_producer_handoff_options(args, usage)
+    if isinstance(options, str):
+        print(options, file=sys.stderr)
+        return 1
+
+    project_root = project_root_for(metadata)
+    paths = project_paths(metadata, project_root)
+    campaign = str(options["campaign"])
+    asset_id = str(options["asset_id"])
+    context_path = (
+        Path(resolve_project_path(project_root, options["context"]))
+        if options.get("context")
+        else paths["scratch_dir"] / campaign / "producer-context.json"
+    )
+    try:
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        print(f"{context_path}: producer context not found: {exc}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as exc:
+        print(f"{context_path}: invalid producer context JSON: {exc}", file=sys.stderr)
+        return 1
+    if not isinstance(context, dict) or context.get("kind") != "producer_context":
+        print(f"{context_path}: expected kind=producer_context", file=sys.stderr)
+        return 1
+
+    asset = producer_context_asset(context, asset_id)
+    if asset is None:
+        print(f"{context_path}: asset id not found: {asset_id}", file=sys.stderr)
+        return 1
+
+    producer_skill = str(
+        context.get("producer_skill") or string_at(metadata, "skills", "image") or ""
+    )
+    size = asset.get("size")
+    if not valid_size(size):
+        print(f"{context_path}: asset {asset_id} has invalid size", file=sys.stderr)
+        return 1
+    target = producer_handoff_target(project_root, paths, campaign, asset)
+    suffix = target.suffix.lower()
+    if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+        print(
+            f"{target}: producer handoff target must be png, jpg, jpeg, or webp",
+            file=sys.stderr,
+        )
+        return 1
+
+    constraint_error = producer_handoff_constraint_error(producer_skill, asset_id, size, suffix)
+    if constraint_error:
+        print(constraint_error, file=sys.stderr)
+        return 1
+
+    try:
+        target.resolve().relative_to(paths["scratch_dir"].resolve())
+    except ValueError:
+        print(
+            f"{target}: producer handoff target must stay under artifacts.scratch "
+            f"({paths['scratch_dir'].resolve()})",
+            file=sys.stderr,
+        )
+        return 1
+
+    print_kv(
+        {
+            "mode": "producer-handoff",
+            "metadata": metadata_path or "",
+            "project_root": project_root,
+            "campaign": campaign,
+            "asset_id": asset_id,
+            "producer_context": context_path,
+            "producer_skill": producer_skill,
+            "possible_cost": "true",
+            "not_generated_yet": "true",
+            "target": target,
+            "target_exists": bool_text(target.exists()),
+            "size": size_text(size),
+            "format": suffix.lstrip("."),
+            "prompt": single_line(str(asset.get("prompt") or "")),
+            "negative_prompt": single_line(str(asset.get("negative_prompt") or "")),
         }
     )
     return 0
@@ -384,6 +517,243 @@ def parse_accept_options(args: list[str], usage: str) -> dict[str, Any] | str:
     ):
         return "--checksum-sha256 must be a 64-character hex digest"
     return options
+
+
+def parse_asset_report_options(args: list[str], usage: str) -> dict[str, Any] | str:
+    return parse_value_options(
+        args,
+        usage=usage,
+        command_name="asset-report",
+        value_options={
+            "--file": "file",
+            "--campaign": "campaign",
+            "--asset-id": "asset_id",
+        },
+        defaults={"file": "", "campaign": "", "asset_id": ""},
+        required=("file",),
+    )
+
+
+def parse_producer_handoff_options(args: list[str], usage: str) -> dict[str, Any] | str:
+    return parse_value_options(
+        args,
+        usage=usage,
+        command_name="producer-handoff",
+        value_options={
+            "--campaign": "campaign",
+            "--asset-id": "asset_id",
+            "--context": "context",
+        },
+        defaults={"campaign": "", "asset_id": "", "context": ""},
+        required=("campaign", "asset_id"),
+    )
+
+
+def parse_value_options(
+    args: list[str],
+    *,
+    usage: str,
+    command_name: str,
+    value_options: dict[str, str],
+    defaults: dict[str, Any],
+    required: tuple[str, ...],
+) -> dict[str, Any] | str:
+    options = dict(defaults)
+    remaining = list(args)
+    while remaining:
+        token = remaining.pop(0)
+        if token in {"-h", "--help"}:
+            print(usage)
+            raise SystemExit(0)
+        if token in value_options:
+            if not remaining:
+                return f"{token} requires a value"
+            options[value_options[token]] = remaining.pop(0)
+            continue
+        matched = False
+        for flag, key in value_options.items():
+            if token.startswith(f"{flag}="):
+                options[key] = token.split("=", 1)[1]
+                matched = True
+                break
+        if matched:
+            continue
+        if token.startswith("-"):
+            return f"unknown {command_name} option: {token}"
+        return usage
+
+    for key in required:
+        if not options[key]:
+            return f"{command_name} requires --{key.replace('_', '-')}"
+    return options
+
+
+def build_asset_report(
+    *,
+    metadata: dict[str, Any],
+    metadata_path: str | None,
+    project_root: Path,
+    paths: dict[str, Path],
+    file_path: Path,
+    campaign_hint: str,
+    asset_id_hint: str,
+) -> dict[str, object]:
+    file_metadata = read_candidate_metadata(file_path)
+    if file_metadata["error"]:
+        return {"error": file_metadata["error"]}
+
+    checksum = checksum_path(file_path)
+    corpus = asset_corpus(file_path, paths)
+    accepted_entry = (
+        accepted_entry_for_file(paths["accepted_state"], project_root, file_path, checksum)
+        if corpus == "approved"
+        else None
+    )
+    campaign = (
+        campaign_hint
+        or string_from_mapping(accepted_entry, "campaign")
+        or campaign_from_corpus_path(file_path, paths, corpus)
+    )
+    asset_id = asset_id_hint or string_from_mapping(accepted_entry, "asset_id") or file_path.stem
+    return {
+        "mode": "asset-report",
+        "metadata": metadata_path or "",
+        "project_root": project_root,
+        "file": file_path,
+        "path": relative_project_path(project_root, file_path),
+        "corpus": corpus,
+        "accepted": bool_text(accepted_entry is not None),
+        "campaign": campaign,
+        "asset_id": asset_id,
+        "mime_type": file_metadata["mime_type"],
+        "size": size_text(file_metadata["size"]),
+        "checksum_sha256": checksum,
+        "accepted_state": paths["accepted_state"],
+        "project_id": string_at(metadata, "project", "id") or project_root.name,
+        "error": "",
+    }
+
+
+def asset_corpus(file_path: Path, paths: dict[str, Path]) -> str:
+    resolved = file_path.resolve()
+    for corpus, root_key in (("scratch", "scratch_dir"), ("approved", "approved_dir")):
+        try:
+            resolved.relative_to(paths[root_key].resolve())
+            return corpus
+        except ValueError:
+            continue
+    return "external"
+
+
+def accepted_entry_for_file(
+    accepted_state: Path,
+    project_root: Path,
+    file_path: Path,
+    checksum: str,
+) -> dict[str, Any] | None:
+    data = read_yaml_mapping(accepted_state)
+    accepted = data.get("accepted") if isinstance(data.get("accepted"), list) else []
+    relative_path = relative_project_path(project_root, file_path)
+    for entry in accepted:
+        if not isinstance(entry, dict):
+            continue
+        entry_path = str(entry.get("path") or "")
+        entry_checksum = str(entry.get("checksum_sha256") or "")
+        if entry_path == relative_path and (not entry_checksum or entry_checksum == checksum):
+            return entry
+    return None
+
+
+def campaign_from_corpus_path(
+    file_path: Path,
+    paths: dict[str, Path],
+    corpus: str,
+) -> str:
+    root_key = {"scratch": "scratch_dir", "approved": "approved_dir"}.get(corpus)
+    if not root_key:
+        return ""
+    try:
+        relative = file_path.resolve().relative_to(paths[root_key].resolve())
+    except ValueError:
+        return ""
+    return relative.parts[0] if len(relative.parts) > 1 else ""
+
+
+def string_from_mapping(value: dict[str, Any] | None, key: str) -> str:
+    if not isinstance(value, dict):
+        return ""
+    item = value.get(key)
+    return str(item) if item not in (None, "") else ""
+
+
+def producer_context_asset(context: dict[str, Any], asset_id: str) -> dict[str, Any] | None:
+    assets = context.get("assets") if isinstance(context.get("assets"), list) else []
+    for asset in assets:
+        if isinstance(asset, dict) and str(asset.get("id") or "") == asset_id:
+            return asset
+    return None
+
+
+def producer_handoff_target(
+    project_root: Path,
+    paths: dict[str, Path],
+    campaign: str,
+    asset: dict[str, Any],
+) -> Path:
+    target_path = str(asset.get("target_path") or "")
+    if target_path:
+        return Path(resolve_project_path(project_root, target_path))
+    target_file = str(asset.get("target_file") or f"{asset.get('id') or 'asset'}.png")
+    return paths["scratch_dir"] / campaign / target_file
+
+
+def producer_handoff_constraint_error(
+    producer_skill: str,
+    asset_id: str,
+    size: object,
+    suffix: str,
+) -> str:
+    if not valid_size(size):
+        return f"producer handoff constraint: asset {asset_id} has invalid size"
+    width, height = int(size[0]), int(size[1])  # type: ignore[index]
+    if "gpt-image" not in producer_skill.lower():
+        return ""
+    if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+        return "gpt-image constraint: output format must be png, jpeg, jpg, or webp"
+    if width % 16 or height % 16:
+        suggested = f"{round_up_to_multiple(width, 16)}x{round_up_to_multiple(height, 16)}"
+        return (
+            f"gpt-image constraint: asset {asset_id} size {width}x{height} "
+            f"must be a multiple of 16; suggested {suggested}"
+        )
+    ratio = width / height
+    if ratio < 0.25 or ratio > 4:
+        return (
+            f"gpt-image constraint: asset {asset_id} aspect ratio must be between 1:4 and 4:1"
+        )
+    return ""
+
+
+def valid_size(size: object) -> bool:
+    return (
+        isinstance(size, list)
+        and len(size) == 2
+        and all(isinstance(item, int) and item > 0 for item in size)
+    )
+
+
+def size_text(size: object) -> str:
+    if not valid_size(size):
+        return "0x0"
+    return f"{size[0]}x{size[1]}"  # type: ignore[index]
+
+
+def bool_text(value: bool) -> str:
+    return "true" if value else "false"
+
+
+def single_line(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip()
 
 
 def release_campaign(args: list[str], metadata: dict[str, Any], metadata_path: str | None) -> int:

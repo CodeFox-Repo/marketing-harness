@@ -296,6 +296,20 @@ python3 "$SKILL_ROOT/scripts/harness.py" --project-root "$PWD" \
 Use this output to ground the production plan. Do not treat it as an asset
 intake or promotion command.
 
+Internal producer handoff helper, after dry-run and before any paid/live
+producer call:
+
+```bash
+python3 "$SKILL_ROOT/scripts/harness.py" --project-root "$PWD" \
+  --metadata marketing.harness.yaml producer-handoff \
+  --campaign launch \
+  --asset-id web-banner
+```
+
+Use this to read `producer-context.json`, validate the selected asset's prompt,
+size, format, producer skill, and target scratch path, and print
+`not_generated_yet=true`. This helper never calls the producer.
+
 Internal acceptance helper, after the user has accepted a concrete candidate:
 
 ```bash
@@ -317,6 +331,20 @@ candidate. In a multi-candidate context, ask for exact asset ids or file paths.
 The helper copies from scratch to approved assets, writes an approved manifest,
 validates mime, dimensions, and checksum, updates `accepted.yaml`, optionally
 updates `asset-state.yaml` and plan status, and never runs git commands.
+It prints the report fields needed for the final response, including
+`accepted=true`, `corpus=approved`, `mime_type`, `size`, and `checksum_sha256`.
+
+Internal report helper, for a real candidate before or after acceptance:
+
+```bash
+python3 "$SKILL_ROOT/scripts/harness.py" --project-root "$PWD" \
+  --metadata marketing.harness.yaml asset-report \
+  --file .harness/marketing/out/launch/web-banner.png
+```
+
+Use this before final reporting when no accept command just ran. If
+`corpus=scratch` and `accepted=false`, say the file has not entered the durable
+accepted corpus.
 
 ## Legacy Migration
 
@@ -378,16 +406,18 @@ changelog, for example `--changelog packages/kobe/CHANGELOG.md`, and do not pass
 the polluted `producer-context.json` to the image producer.
 
 Real release images must be PNG, JPEG, or WebP files emitted by the configured
-producer. SVG placeholders are not final images. For producer handoff, read the
-target asset's `prompt` and `size` from `producer-context.json`, generate one
-primary candidate such as `release-card` unless the user asked for the full set,
-state the selected producer skill and possible billing before calling it, and
-write the result to `artifacts.scratch/<campaign>/<asset-id>.png`. Use the
+producer. SVG placeholders are not final images. For producer handoff, run the
+internal `producer-handoff` helper for the target asset, generate one primary
+candidate such as `release-card` unless the user asked for the full set, state
+the helper's selected producer skill and possible billing before calling it, and
+write the result to the helper's target path under `artifacts.scratch`. Use the
 metadata-selected image skill, such as `gpt-image`.
 
 Final responses after release image work must report the real image path,
-dimensions, checksum, and whether it has been accepted. If the PNG/JPEG/WebP is
-still in scratch, say that it has not entered the durable accepted corpus.
+dimensions, checksum, corpus, and whether it has been accepted. Use the latest
+`accept` or `asset-report` helper output as the source of truth. If the
+PNG/JPEG/WebP is still in scratch, say that it has not entered the durable
+accepted corpus.
 
 ## Verification
 
