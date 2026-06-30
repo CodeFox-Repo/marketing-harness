@@ -26,3 +26,12 @@ lane: generator                 # generator | reference (borrow convention only)
 
 Directories whose name starts with `_` (such as `_template/`) are ignored by the
 catalog. Use `_template/SKILL.md` as the starting point for a new producer.
+
+## Directory naming
+
+Name each producer directory `<producer-name>-<capability>` — e.g.
+`logo-generator-logo`, `threads-carousel-social`, `remotion-best-practices-video`.
+The capability also lives in frontmatter (that is what `catalog.py` routes on); the
+suffix keeps the directory self-describing and avoids collisions when two producers
+serve the same capability. The producer's `name:` frontmatter stays its original
+upstream name, so the catalog id is unchanged.

@@ -53,7 +53,8 @@ producer. Do not add image understanding or model calls to the runtime.
 - Producer skills install at **user/project scope** and are bound to a
   capability via `metadata.skills` (`capability -> installed skill name`).
 - **Allowed**: bundle **read-only, instruction-grade** producers under
-  `producers/<name>/SKILL.md`. A nested skill is *not* discoverable by the
+  `producers/<name>-<capability>/SKILL.md` (e.g. `logo-generator-logo`; the
+  `name:` frontmatter keeps the original upstream name). A nested skill is *not* discoverable by the
   `Skill` tool, so "bundled" means the agent **reads** the producer's `SKILL.md`
   as procedure/context — it is never registered, so it never pollutes the user's
   global skill list. `scripts/catalog.py` enumerates `producers/` and parses
