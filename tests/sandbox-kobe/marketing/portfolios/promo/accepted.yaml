@@ -1,0 +1,7 @@
+schema_version: "1.0"
+owner:
+  kind: "repo"
+  id: "kobe"
+domain: "promo"
+revision: 1
+accepted:

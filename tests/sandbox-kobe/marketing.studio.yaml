@@ -1,0 +1,58 @@
+project:
+  id: kobe
+  root: .
+  marketingRoot: marketing
+
+organization:
+  id: codefox-org
+  name: CodeFox Org
+
+skillDistribution:
+  upstream: sma1lboy/brand-studio
+  fork: CodeFox-Repo/brand-studio
+  scope: org
+  ref: main
+
+theme:
+  path: marketing/theme.md
+  references: marketing/references
+
+campaigns:
+  release: marketing/campaigns/release
+  promo: marketing/campaigns/promo
+
+skills:
+  # Capability -> producer. image binds to a prompt-craft producer; the pixels
+  # come from the text-to-image backend below.
+  image: gpt-image
+
+backends:
+  text-to-image:
+    runner: codex-exec
+    command: "codex exec --image"
+    model: gpt-image-2
+
+campaign:
+  name: kobe-clean-launch
+  path: marketing/campaigns/promo/kobe-clean-launch.campaign.yaml
+
+artifacts:
+  scratch: .studio/out
+  approved: public/marketing
+
+state:
+  plans: marketing/plans
+  assetIndex: marketing/asset-state.yaml
+  accepted: marketing/accepted.yaml
+  directoryStateFile: asset-state.yaml
+
+sources:
+  assetRoots:
+    - marketing
+    - public/marketing
+  relatedRepos: []
+
+policy:
+  requireHumanApprovalBeforeRender: true
+  requireHumanApprovalBeforeStateUpdate: true
+  allowRootWorkspaceBootstrap: false

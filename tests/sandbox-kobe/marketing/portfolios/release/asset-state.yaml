@@ -1,0 +1,8 @@
+schema_version: "1.0"
+owner:
+  kind: "repo"
+  id: "kobe"
+domain: "release"
+revision: 1
+assets:
+patterns:
