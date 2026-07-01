@@ -171,18 +171,30 @@ design-system lists or taste skills sit in this lane; they are not generators.
 
 ## What "brand weight" is made of
 
-The structured context handed to a producer is:
+Brand weight is **not one blob** — it is several **distinct input weights** from
+different sources, assembled into the structured context handed to a producer.
+Naming them makes the loop precise:
+
+| # | input weight | source | contributes |
+| --- | --- | --- | --- |
+| 1 | **org brand standard** | org fork `public/brand/` (`brand-standard.md`, `theme.base.md`) | base positioning + visual language the product theme inherits |
+| 2 | **product theme fields** | product `theme.md` frontmatter | locked palette, typography, style fragments, avoid/negative, brand tokens |
+| 3 | **reference assets (visual)** | `theme.references` / declared asset roots (in-repo marks, e.g. `glyph-k`) | the real visual language, fed to the backend as image inputs (`-i`), not just words |
+| 4 | **domain accepted samples** | the matching portfolio's `accepted.yaml` (release vs promo, **never crossed**) | style continuity from what's already been accepted in that domain |
+| 5 | **borrowed UI conventions** | referenced design/producer skills | layout/hierarchy/spacing conventions — **borrow convention, not technique** |
+| 6 | **deliverable content** | campaign brief + `content` (headline, subject) + deliverable spec (id, size, modality) | what this specific piece must say/show |
+| 7 | **user direction** | the round's next-direction + taste feedback | human steering for this round |
 
 ```
-brand weight =
-    theme-locked brand fields (palette / typography / references / avoid)
-  + the domain's accepted samples (release vs promo never cross)
-  + borrowed UI conventions from referenced skills (convention only, not technique)
-  - unless the user names a specific skill's specific method
+brand weight = 1 org standard + 2 theme fields + 3 reference assets
+             + 4 domain accepted samples + 5 borrowed conventions
+             + 6 deliverable content + 7 user direction
+             − unless the user names a specific skill's specific method
 ```
 
-brand-studio never fixes the *technique*. It settles brand facts and borrows
-design conventions, packages them as structured context, and hands them off.
+brand-studio never fixes the *technique*. It settles brand facts, gathers these
+inputs, packages them as one structured handoff (`producer-context.json`), and
+hands them off — it does not bake them into a single hardcoded prompt.
 
 ## Engineering conventions
 

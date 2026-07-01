@@ -460,6 +460,25 @@ flowchart LR
   T --> S
 ```
 
+The **`W` (brand weight)** node is itself several **distinct input weights**
+converging — not one blob. Show them explicitly; it is what makes the loop precise:
+
+```mermaid
+flowchart LR
+  O["1 org brand standard"] --> W
+  T["2 product theme fields<br/>palette · type · avoid · tokens"] --> W
+  R["3 reference assets<br/>in-repo marks (glyph-k …)"] --> W
+  A["4 domain accepted samples<br/>release / promo, never crossed"] --> W
+  C["5 borrowed UI conventions<br/>convention, not technique"] --> W
+  D["6 deliverable content<br/>brief · headline · subject · size"] --> W
+  U["7 user direction<br/>round feedback / taste"] --> W
+  W[["brand weight<br/>producer-context.json"]] --> G["generate"]
+```
+
+Each input's source and contribution is tabled in `CLAUDE.md` ("What brand weight
+is made of"). The runtime gathers these into one structured handoff; it never
+bakes them into a single hardcoded prompt.
+
 1. **Generate — actively choose methods, never default to one.** Before fanning
    out, **survey what's available and think about which producers/backends fit
    *this* deliverable**: the bundled `producers/` (via `catalog.py`), installed
