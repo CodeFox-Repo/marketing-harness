@@ -364,6 +364,7 @@ Prefer the canonical command surface:
 | dry render | `repo render --dry-run` |
 | release copy review | `repo release copy --write --releases 4` |
 | `gen-repo` release | `repo gen release --releases 4 --changelog <file>` |
+| producer prompt | `repo prompt --campaign <name> --asset-id <id>` |
 | producer handoff | `repo handoff --campaign <name> --asset-id <id>` |
 | `settle-repo` | `repo settle --campaign <name> --asset-id <id> --file <path>` |
 | report | `repo report --file <path>` |
@@ -419,6 +420,21 @@ settles by `modality`, not an image-only allowlist; accepted entries carry
 clear match, **ask the user**; **hybrid** is allowed (compose several skills).
 When reading a producer/design skill, borrow its **UI convention**, not its
 specific technique — unless the user asks for that technique.
+
+**Weight profiles** live under metadata `weightProfiles`. The studio handoff
+passes only the resolved `weight_profile` name, not expanded percentages, so the
+producer can resolve the profile from metadata without spending prompt tokens.
+Interpret source keys consistently:
+
+- `history`: matching portfolio accepted assets and asset-state memory.
+- `request`: the current user request plus campaign brief/content.
+- `org`: organization brand standard and shared org-fork conventions.
+- `copy`: release copy asset and version facts.
+- `producer`: selected producer/subskill composition convention.
+
+Treat weight profiles as soft source-priority hints. `theme.md` resolved style,
+palette, typography, references, and avoid list are hard brand constraints and
+override soft source weights.
 
 **Backends** decide what engine renders a prompt, orthogonal to `skills`:
 
@@ -697,6 +713,20 @@ python3 "$SKILL_ROOT/scripts/studio.py" --project-root "$PWD" \
 Use this to read `producer-context.json`, validate the selected asset's prompt,
 size, format, producer skill, and target scratch path, and print
 `not_generated_yet=true`. This helper never calls the producer.
+
+Internal producer prompt helper, after dry-run and before any paid/live
+producer call:
+
+```bash
+python3 "$SKILL_ROOT/scripts/studio.py" --project-root "$PWD" \
+  --metadata marketing.studio.yaml repo prompt \
+  --campaign launch \
+  --asset-id web-banner
+```
+
+Use this to render the final text prompt from `producer-context.json`, the
+selected asset, resolved style, and metadata `weightProfiles`. This helper
+prints prompt text only; it never calls the producer or backend.
 
 Internal acceptance helper, after the user has accepted a concrete candidate:
 

@@ -185,6 +185,48 @@ def test_template_declares_org_brand_standard_without_required_brief() -> None:
         "assetState": "assets/marketing/portfolios/promo/asset-state.yaml",
         "patterns": "assets/marketing/portfolios/promo/patterns.md",
     }
+    assert data["weightProfiles"] == {
+        "default": "promo-default",
+        "promo-default": {
+            "history": 30,
+            "request": 30,
+            "org": 10,
+            "producer": 30,
+        },
+        "release-default": {
+            "history": 20,
+            "request": 25,
+            "copy": 35,
+            "org": 10,
+            "producer": 10,
+        },
+        "logo-default": {
+            "history": 20,
+            "request": 20,
+            "org": 30,
+            "producer": 30,
+        },
+    }
+
+
+def test_weight_profile_prefers_domain_profile_over_default() -> None:
+    launcher = load_launcher()
+    meta = {
+        "weightProfiles": {
+            "default": "promo-default",
+            "promo-default": {"history": 30, "request": 30, "org": 10, "producer": 30},
+            "release-default": {
+                "history": 20,
+                "request": 25,
+                "copy": 35,
+                "org": 10,
+                "producer": 10,
+            },
+        }
+    }
+
+    assert launcher.weight_profile_for(meta, "promo") == "promo-default"
+    assert launcher.weight_profile_for(meta, "release") == "release-default"
 
 
 def test_project_root_option_anchors_metadata_relative_paths(tmp_path: Path) -> None:
@@ -917,7 +959,12 @@ deliverables:
 """.lstrip(),
         encoding="utf-8",
     )
-    metadata_path.write_text(json.dumps(metadata(project)), encoding="utf-8")
+    meta = metadata(project)
+    meta["weightProfiles"] = {
+        "default": "promo-default",
+        "promo-default": {"history": 30, "request": 30, "org": 10, "producer": 30},
+    }
+    metadata_path.write_text(json.dumps(meta), encoding="utf-8")
 
     completed = subprocess.run(
         [
@@ -938,6 +985,42 @@ deliverables:
     output_dir = project / "packages/branding/.studio/out/launch"
     assert (output_dir / "web-banner.svg").is_file()
     assert (output_dir / "manifest.json").is_file()
+    producer_context = json.loads(
+        (output_dir / "producer-context.json").read_text(encoding="utf-8")
+    )
+    assert producer_context["kind"] == "producer_context"
+    assert producer_context["weight_profile"] == "promo-default"
+    assert producer_context["assets"][0]["id"] == "web-banner"
+
+    prompt = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_PATH),
+            "--metadata",
+            str(metadata_path),
+            "repo",
+            "prompt",
+            "--campaign",
+            "launch",
+            "--asset-id",
+            "web-banner",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert prompt.returncode == 0, prompt.stderr
+    assert "Weight profile: promo-default (history30/request30/org10/producer30)" in prompt.stdout
+    assert "Use these weights as soft source-priority hints, not arithmetic control." in (
+        prompt.stdout
+    )
+    assert "Theme resolved_style is a hard brand constraint." in prompt.stdout
+    assert "Deliverable: web-banner 320x128" in prompt.stdout
+    assert "Target output:" in prompt.stdout
+    assert "Locked style:" in prompt.stdout
+    assert "clean editorial product lighting" in prompt.stdout
+    assert "Asset prompt:" in prompt.stdout
 
 
 def test_release_render_reads_monorepo_package_changelog_and_renders(tmp_path: Path) -> None:
@@ -1102,6 +1185,7 @@ alias:
     assert producer_context["kind"] == "producer_context"
     assert producer_context["capability"] == "image"
     assert producer_context["producer_skill"] == "gpt-image"
+    assert producer_context["weight_profile"] == "release-default"
     assert producer_context["copy"] == str(copy_path)
     assert producer_context["campaign"] == str(generated_campaign)
     assert producer_context["assets"][0]["id"] == "release-card"
