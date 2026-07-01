@@ -502,6 +502,12 @@ bakes them into a single hardcoded prompt.
    roots / `theme.references`, so candidates inherit the real visual language,
    not just text tokens. If no method clearly fits, ask the user (see Producer
    selection); hybrid across methods is encouraged.
+   **Confirm the method set with the user before firing, and always offer an
+   "explore more" option** — never limit the choice to what's already installed.
+   Alongside the bundled/installed methods, surface installable candidates from
+   `references/recommendations.yaml` (grouped by capability), and if nothing on
+   hand fits, offer to search for / recommend a new producer skill to install.
+   So the confirm step is: available methods **＋ "explore/install more"**.
 2. **Preview — the standard review template (required every round)** — render
    the candidates into `assets/round-review.html`, the reusable, data-driven
    review board. Write a per-round `round.json` beside it and open
