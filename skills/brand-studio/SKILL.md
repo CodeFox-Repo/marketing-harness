@@ -499,17 +499,20 @@ bakes them into a single hardcoded prompt.
 2. **Preview — the standard review template (required every round)** — render
    the candidates into `assets/round-review.html`, the reusable, data-driven
    review board. Write a per-round `round.json` beside it and open
-   `round-review.html?data=round-N.json`; serve on a fixed local port (headless
-   browser and `fetch` need `http://`, not `file://`) and screenshot it. Do not
-   hand-roll a one-off page — **every round uses this template** so review stays
-   consistent and comparable across rounds, with round goal, prev-round nav, and
-   next-round direction built in.
+   `round-review.html?data=round-N.json`; serve it with
+   `scripts/serve-review.py` on a fixed local port (headless browser and `fetch`
+   need `http://`, not `file://`) and screenshot it. Do not hand-roll a one-off
+   page — **every round uses this template** so review stays consistent and
+   comparable across rounds, with round goal, prev-round nav, and next-round
+   direction built in.
 3. **Verdicts — keep / maybe / drop** — the user marks each candidate
    **keep / maybe / drop** with an optional per-icon note, plus a next-round
-   direction, right in the template; its **Export** writes
-   `decisions-round-N.json`. Read that to drive the next two steps. (For only a
-   handful of candidates an AskUserQuestion multi-select is an acceptable
-   shortcut.) Never infer verdicts.
+   direction, right in the template. Two ways to get the decisions to the agent:
+   **(A) Save to disk** — the template POSTs to `serve-review.py`, which writes
+   `decisions-round-N.json` next to the round data; **Read** it directly, no
+   paste. **(B) Export / paste** — the user copies/downloads the JSON and pastes
+   it. (For only a handful of candidates an AskUserQuestion multi-select is an
+   acceptable shortcut.) Never infer verdicts.
 4. **Settle** — for each **keep**, run `repo settle` into the matching portfolio
    (release/promo) with its `modality` and domain. `maybe`/`drop` and unpicked
    candidates stay in scratch (or are deleted only on request).
