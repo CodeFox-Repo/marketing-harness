@@ -116,6 +116,29 @@ backends:
 - Trivial case (single deliverable, single producer, wanting tight back-and-
   forth) → run inline in main; don't spawn.
 
+## The complete loop: develop → settle → repeat
+
+Development and settlement are **one closed loop**, not separate steps. brand
+state → brand weight → generate → review → settle the keepers → next round, with
+settled assets feeding the next round's weight. Every multi-candidate task runs
+this loop (see SKILL.md "Interactive Generation & Review Loop" for the mechanics
+and the `round-review.html` template).
+
+```mermaid
+flowchart LR
+  S["brand state<br/>theme · references · accepted portfolio"] --> W["brand weight<br/>tokens + reference assets"]
+  W --> G["generate<br/>producers / backends, in parallel"]
+  G --> R["review<br/>round-review.html<br/>keep · maybe · drop + notes"]
+  R -->|keep| T["settle<br/>approved + manifest + portfolio"]
+  R -->|maybe / drop| X["stay in scratch"]
+  R -->|next direction| G
+  T --> S
+```
+
+The loop never stops at scratch: keepers are settled into the durable portfolio,
+and nothing accepted is lost. Review is human-gated; generation and settle are
+where the runtime and producers do their deterministic work.
+
 ## Producer selection
 
 - Map the deliverable's capability → best-match producer skill.

@@ -438,7 +438,19 @@ one producer can run inline. See `CLAUDE.md` for the full boundary.
 Generation is a smooth, end-to-end human-in-the-loop loop. Never dump raw files
 on the user or stop at scratch — always **generate → preview → ask → settle →
 offer the next round**. The user only makes taste calls (which ones); they never
-wrangle files.
+wrangle files. Develop and settle are one complete cycle: settled assets feed the
+brand weight of the next round.
+
+```mermaid
+flowchart LR
+  S["brand state<br/>theme · references · accepted portfolio"] --> W["brand weight<br/>tokens + reference assets"]
+  W --> G["generate<br/>producers / backends, in parallel"]
+  G --> R["review<br/>round-review.html<br/>keep · maybe · drop + notes"]
+  R -->|keep| T["settle<br/>approved + manifest + portfolio"]
+  R -->|maybe / drop| X["stay in scratch"]
+  R -->|next direction| G
+  T --> S
+```
 
 1. **Generate** — fan out producers/backends in parallel (one subagent or
    `codex exec` per candidate, each writing a distinct output file so they do not
